@@ -1,0 +1,7 @@
+C:\Workspace\Technion\GifLamp\Application\Application\obj\Debug\net7.0-windows\Application.csproj.AssemblyReference.cache
+C:\Workspace\Technion\GifLamp\Application\Application\obj\Debug\net7.0-windows\MainWindow.g.cs
+C:\Workspace\Technion\GifLamp\Application\Application\obj\Debug\net7.0-windows\View\Matrix.g.cs
+C:\Workspace\Technion\GifLamp\Application\Application\obj\Debug\net7.0-windows\View\Strip.g.cs
+C:\Workspace\Technion\GifLamp\Application\Application\obj\Debug\net7.0-windows\App.g.cs
+C:\Workspace\Technion\GifLamp\Application\Application\obj\Debug\net7.0-windows\Application_MarkupCompile.cache
+C:\Workspace\Technion\GifLamp\Application\Application\obj\Debug\net7.0-windows\Application_MarkupCompile.lref
