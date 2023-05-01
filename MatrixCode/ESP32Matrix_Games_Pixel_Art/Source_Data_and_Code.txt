@@ -1,0 +1,15 @@
+First Video:
+	https://youtu.be/_0a9JZLGu4M
+Second Video:
+	https://youtu.be/cqmWfE1DSyM
+Third Video:
+	https://youtu.be/apmOSQmeKJA
+	
+Github Needed Libraries:
+	https://github.com/AaronLiddiment
+	
+Github Source Code:
+	https://github.com/s-marley/ESP32Matrix.git
+	
+MIT Apps Inventor Site for android:
+	https://appinventor.mit.edu/
