@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "7rbM1UyUixNErAylZEJlX51b2/YnfWxjNdKOhdFmGQwdC9Vt46qT3Xjq9Ck9mSy2C+AwW+tPy3lUd6MDoV09YQ==",
+  "dgSpecHash": "zplPUpNjn6gsjQfYWYrb4TulfC/QOg9XTe3SYUSxSR/9Br4lNU6fgbj8UPa/SDKWgNr4VCISL3UFBFv/iFVthg==",
   "success": true,
   "projectFilePath": "C:\\Workspace\\Technion\\GifLamp\\Application\\GifApp\\GifApp.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\Aviel Cohen\\.nuget\\packages\\extended.wpf.toolkit\\4.5.0\\extended.wpf.toolkit.4.5.0.nupkg.sha512"
+  ],
   "logs": []
 }
