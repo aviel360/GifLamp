@@ -1,21 +1,30 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.IO.Ports;
 using System.Linq;
+using System.Media;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Controls;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.Xml;
 
 namespace GifApp
 {
-    public class MatrixViewModel : BaseViewModel
+    /// <summary>
+    /// Interaction logic for SettingsView.xaml
+    /// </summary>
+    public partial class SettingsView : UserControl
     {
         protected int[] arrPokeball =
-        {
+{
             0xd0d2d4, 0xdedfe0, 0xdbdcde, 0xdbdcde, 0xd0d2d4, 0x1e1d1d, 0x030202, 0x100708, 0x100708, 0x030202, 0x222021, 0xd2d4d6, 0xdbdcde, 0xdedfe0, 0xdad9dc, 0xa69da1,
             0xdedfe0, 0xf0f1f3, 0xe6e7e9, 0x403f40, 0x242323, 0xc12328, 0xcf262b, 0xcf262b, 0xcf262b, 0xcf262b, 0xc12328, 0x222021, 0x454646, 0xe6e7e9, 0xf0f1f3, 0xe2e1e3,
             0xdbdcde, 0xe6e7e9, 0x3b3738, 0x98000b, 0xd21f25, 0xf62e34, 0xfc3137, 0xfc3137, 0xfc3137, 0xfc3137, 0xf62e34, 0xd21f25, 0xaa1c20, 0x403f40, 0xeaebed, 0xdad9dc,
@@ -33,34 +42,39 @@ namespace GifApp
             0xdbdcde, 0xf0f1f3, 0xd6d7d9, 0x303132, 0x161616, 0x656565, 0x767676, 0x767676, 0x767676, 0x767676, 0x656565, 0x161616, 0x3b3738, 0xd6d7d9, 0xf0f1f3, 0xdbdcde,
             0xdbdcde, 0xeaebed, 0xeaebed, 0xdad9dc, 0xcbcdcf, 0x1e1d1d, 0x030202, 0x070909, 0x070909, 0x030202, 0x222021, 0xcbcdcf, 0xd6d7d9, 0xeaebed, 0xeaebed, 0xdbdcde
         };
-
-        protected ObservableCollection<LedState> m_matColors = new ObservableCollection<LedState>();
-
-        public ObservableCollection<LedState> MatColors
+        public SettingsView()
         {
-            get { return m_matColors; }
-            set { SetProperty(ref m_matColors, value); }
+            InitializeComponent();
+            DataContext = new SettingsViewModel();
         }
 
-        public MatrixViewModel() 
+        private void UploadCommand(object sender, RoutedEventArgs e)
         {
-            MatColors = new ObservableCollection<LedState>();
-            for (int i = 0; i < 16; i++)
+            string imageLocation = "";
+            try
             {
-                for (int j = 0; j < 16; j++)
+                OpenFileDialog dialog = new OpenFileDialog();
+                dialog.Filter = "jpg files(*.jpg)|*.jpg| PNG files(*.png)| All Files(*.*)|(*.*)|";
+                if (dialog.ShowDialog() ?? false)
                 {
-                    MatColors.Add(new LedState());
+                    imageLocation = dialog.FileName;
                 }
-            }
-            DisplayImage(arrPokeball);
-        }
 
-        public void DisplayImage(int[] arrImage)
-        {
-            for (int i = 0; i < 16*16; i++)
+            }
+            catch (Exception)
             {
-                System.Windows.Media.Color iColor = System.Windows.Media.Color.FromRgb((byte)((arrImage[i] >> 16) & 0xFF), (byte)((arrImage[i] >> 8) & 0xFF), (byte)(arrImage[i] & 0xFF));
-                MatColors[i].Color  = new SolidColorBrush(iColor);
+
+            }
+        }
+        private void ConnectCommand(object sender, RoutedEventArgs e)
+        {
+            string? selectedPort = PortsComboBox.SelectedItem.ToString();
+            if(!String.IsNullOrEmpty(selectedPort))
+            {
+                SerialPort port = new SerialPort(selectedPort, 921600, Parity.None);
+                char[] arr = new char[1024];
+                Buffer.BlockCopy(arrPokeball, 0, arr, 0, arr.Length);
+                port.Write(arr,0,1024);
             }
         }
     }

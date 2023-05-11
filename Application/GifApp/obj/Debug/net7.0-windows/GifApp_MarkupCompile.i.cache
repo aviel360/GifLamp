@@ -4,16 +4,16 @@
 winexe
 C#
 .cs
-C:\Workspace\Technion\GifLamp\Application\GifApp\obj\Debug\net7.0-windows\
+C:\Workspace\GifLamp\Application\GifApp\obj\Debug\net7.0-windows\
 GifApp
 none
 false
 TRACE;DEBUG;NET;NET7_0;NETCOREAPP
-C:\Workspace\Technion\GifLamp\Application\GifApp\App.xaml
+C:\Workspace\GifLamp\Application\GifApp\App.xaml
 31833631337
 
 12-49241603
-203-431782995
+203-1780332952
 MainWindow.xaml;View\Matrix.xaml;View\Settings.xaml;
 
 True
