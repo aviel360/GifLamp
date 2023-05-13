@@ -9,6 +9,8 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Xml;
+using System.IO.Ports;
+
 
 namespace GifApp
 {
@@ -18,7 +20,20 @@ namespace GifApp
         protected string m_MatSizeCurrent = string.Empty;
         protected List<string> m_AnimationSpeed = new List<string> { "x0.5", "x1", "x1.5", "x2" };
         protected string m_AnimationSpeedCurrent = "x1";
+        protected ObservableCollection<string> m_arrPorts = new ObservableCollection<string>();
+        protected string m_PortCurrent = string.Empty;
 
+        public ObservableCollection<string> Ports
+        {
+            get { return m_arrPorts; }
+            set { SetProperty(ref m_arrPorts, value);}
+        }
+
+        public string PortCurrent
+        {
+            get { return m_PortCurrent; }
+            set { SetProperty(ref m_PortCurrent, value); }
+        }
 
         public List<string> MatSizes
         {
@@ -42,11 +57,13 @@ namespace GifApp
             get { return m_AnimationSpeedCurrent; }
             set { SetProperty(ref m_AnimationSpeedCurrent, value); }
         }
-
         public SettingsViewModel() 
         {
-
+            Array arrPorts = SerialPort.GetPortNames();
+            foreach(string port in arrPorts)
+            {
+                Ports.Add(port);
+            }
         }
-
     }
 }

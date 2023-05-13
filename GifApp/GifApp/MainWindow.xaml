@@ -9,7 +9,7 @@
     <Grid>
         <TabControl>
             <TabItem Header="Settings">
-                <local:MatrixView/>
+                <local:SettingsView/>
             </TabItem>
             <TabItem Header="Led Dispay">
                 <local:MatrixView/>
