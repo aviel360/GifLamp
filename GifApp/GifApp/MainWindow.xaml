@@ -8,9 +8,6 @@
         Title="MainWindow" MinHeight="880" MinWidth="880" MaxHeight="880" MaxWidth="880">
     <Grid>
         <TabControl>
-            <TabItem Header="Settings">
-                <local:SettingsView/>
-            </TabItem>
             <TabItem Header="Led Dispay">
                 <local:MatrixView/>
             </TabItem>
