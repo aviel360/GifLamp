@@ -11,12 +11,20 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
+            <RowDefinition Height="0.1*"/>
 
         </Grid.RowDefinitions>
 
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+
         <TextBlock Text="LED Panel" FontSize="24" FontWeight="Bold"/>
-        <xctk:ColorPicker Name="ClrPcker_Background" SelectedColorChanged="ClrPcker_Background_SelectedColorChanged" Grid.ColumnSpan="2"></xctk:ColorPicker>
-        <ItemsControl Grid.Row="1" ItemsSource="{Binding MatColors}">
+        <xctk:ColorPicker Name="ClrPcker_Background" SelectedColorChanged="ClrPcker_Background_SelectedColorChanged" Grid.ColumnSpan="4"></xctk:ColorPicker>
+        <ItemsControl Grid.ColumnSpan="4" Grid.Row="1" ItemsSource="{Binding MatColors}">
             <ItemsControl.ItemContainerStyle>
                 <Style TargetType="{x:Type ContentPresenter}">
                     <EventSetter Event="PreviewMouseLeftButtonDown" Handler="Rectangle_MouseLeftButtonDown"/>
@@ -33,5 +41,23 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
+        <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,-10,0,0">
+            <Label Content="Choose Animation Speed" HorizontalAlignment="Center" FontSize="16" FontWeight="DemiBold" Margin="0,10,0,5"/>
+            <ComboBox ItemsSource="{Binding AnimationSpeed}" SelectedItem="{Binding AnimationSpeedCurrent, Mode=TwoWay}" Width="60" Height="23"></ComboBox>
+        </StackPanel>
+        <StackPanel Grid.Row="2" Grid.Column="0" Margin="10,-10,0,0">
+            <Label Content="Serial Connect" HorizontalAlignment="Center" FontSize="16" FontWeight="DemiBold" Margin="0,10,0,5"/>
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <ComboBox x:Name="PortsComboBox"  ItemsSource="{Binding Ports}" SelectedItem="{Binding PortCurrent}" Width="100" Height="23"></ComboBox>
+                <Button x:Name="ButtonConnect" Click="ConnectCommand" Width="70" Height="23" Margin="30,0,0,0">Connect</Button>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,-10,0,0">
+            <Label Content="Upload Image" HorizontalAlignment="Center" FontSize="16" FontWeight="DemiBold" Margin="0,10,0,5"/>
+            <Button Click="UploadCommand" Width="60" Height="23">Upload</Button>
+        </StackPanel>
+        <StackPanel Grid.Row="2" Grid.Column="3" Margin="0,20,0,0">
+            <Button Click="SendCommand" Width="60" Height="23">Send</Button>
+        </StackPanel>
     </Grid>
 </UserControl>

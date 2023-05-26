@@ -16,7 +16,7 @@ namespace GifApp
 
         public LedState()
         {
-            Color = (SolidColorBrush)(new BrushConverter().ConvertFrom("#FF0000") ?? Brushes.White);
+            Color = (SolidColorBrush)(new BrushConverter().ConvertFrom("#000000") ?? Brushes.Black);
         }
     }
 }

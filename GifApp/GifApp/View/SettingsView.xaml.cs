@@ -1,13 +1,14 @@
 ﻿using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
+using System.IO;
 using System.IO.Ports;
-using System.Linq;
-using System.Media;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Collections.Generic;
+using System.Linq;
+using System.Media;
+using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -72,9 +73,16 @@ namespace GifApp
             if(!String.IsNullOrEmpty(selectedPort))
             {
                 SerialPort port = new SerialPort(selectedPort, 921600, Parity.None);
-                char[] arr = new char[1024];
-                Buffer.BlockCopy(arrPokeball, 0, arr, 0, arr.Length);
-                port.Write(arr,0,1024);
+                port.Open();
+
+                //open the file using file stream
+                FileStream fileStream = new FileStream(@"C:\Workspace\GifLamp\GifApp\GifApp\Resources\xw.bin", FileMode.Open, FileAccess.Read, FileShare.Read);
+
+                //store the open file as binary
+                BinaryReader binary = new BinaryReader(fileStream, Encoding.GetEncoding(28591));
+
+                //at this point I write to the port
+                port.Write(binary.ReadBytes((int)fileStream.Length), 0, (int)fileStream.Length);
             }
         }
     }
