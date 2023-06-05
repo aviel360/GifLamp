@@ -5,13 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GifApp"
         mc:Ignorable="d"
-        Title="MainWindow" MinHeight="880" MinWidth="880" MaxHeight="880" MaxWidth="880">
+        Title="Gif Lamp" MinHeight="880" MinWidth="880" MaxHeight="880" MaxWidth="880">
     <Grid>
-        <TabControl>
-            <TabItem Header="Led Dispay">
-                <local:MatrixView/>
-            </TabItem>
-        </TabControl>
-
+        <local:MatrixView/>
     </Grid>
 </Window>
+<!--         <TabControl>
+            <TabItem Header="Led Dispay">
+            </TabItem>
+        </TabControl> -->

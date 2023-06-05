@@ -1,22 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
+#nullable enable
 
 namespace GifApp
 {
-    public class LedState
+    public class LedState : BaseViewModel
     {
-        public Brush Color { get; set; }
+        private Brush? m_ColorCurrent;
+        public Brush Color
+        {
+            get { return m_ColorCurrent; }
+            set { SetProperty(ref m_ColorCurrent, value); }
+        }
         public double Brightness { get; set; } = 1.0;
 
         private static Random _random = new Random();
 
-        public LedState()
+        public LedState(Brush? brush = null)
         {
-            Color = (SolidColorBrush)(new BrushConverter().ConvertFrom("#000000") ?? Brushes.Black);
+            Color = brush ?? Brushes.Black;
         }
     }
 }

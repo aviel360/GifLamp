@@ -17,6 +17,14 @@ using System.Windows.Shapes;
 using Microsoft.Win32;
 using System.IO.Pipes;
 using System.Threading;
+using System.Collections;
+using PhotoSauce.MagicScaler;
+using static GifApp.MatrixViewModel;
+using System.Drawing.Imaging;
+using System.Windows.Media.Media3D;
+using System.Collections.ObjectModel;
+
+#nullable enable
 
 namespace GifApp
 {
@@ -47,14 +55,16 @@ namespace GifApp
         };
 
         protected string m_colorCurrentBrush;
-        protected string m_imageLocation;
-        protected SerialPort m_serialPort;
+        protected SerialPort? m_serialPort;
         protected bool m_bIsConnected = false;
+        protected MatrixViewModel m_matViewModel;
+        protected string m_strPath;
 
         public MatrixView()
         {
             InitializeComponent();
-            DataContext = new MatrixViewModel();
+            m_matViewModel = new MatrixViewModel();
+            DataContext = m_matViewModel;
             m_colorCurrentBrush = "#FFFFFF";
 
             Task.Run(RunTask);
@@ -73,28 +83,61 @@ namespace GifApp
                 clickedRectangle.Fill = (SolidColorBrush)(new BrushConverter().ConvertFrom(m_colorCurrentBrush) ?? clickedRectangle.Fill);
             }
         }
-        private void UploadCommand(object sender, RoutedEventArgs e)
+        private async void UploadCommand(object sender, RoutedEventArgs e)
         {
-            try
-            {
+           // try
+            //{
                 OpenFileDialog dialog = new OpenFileDialog();
-                dialog.Filter = "jpg files(*.jpg)|*.jpg| PNG files(*.png)| All Files(*.*)|(*.*)|";
+                dialog.Filter = "Image files (*.bmp, *.jpg, *.gif, *.png)|*.bmp;*.jpg;*.png;*.gif|All files (*.*)|*.*";
+                
                 if (dialog.ShowDialog() ?? false)
                 {
-                    m_imageLocation = dialog.FileName;
-                }
+                    await Task.Run(() => ConvertImage(dialog.FileName));
+                    SplitGif(m_strPath);
 
             }
-            catch (Exception)
-            {
 
+            //}
+            //catch (Exception)
+            //{
+
+            // }
+        }
+
+        public void SplitGif(string strPath)
+        {
+            using (FileStream stream = new FileStream(strPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+                int j = 0;
+                foreach (BitmapFrame frame in decoder.Frames)
+                {
+                    if (j > 0)
+                    {
+                        m_matViewModel.MatFrame.Add(j.ToString());
+                        m_matViewModel.MatColors.Add(new ObservableCollection<LedState>());
+                    }
+                    int width = (int)frame.Width;
+                    int height = (int)frame.Height;
+                    byte[] pixelData = new byte[width * height * 4];
+                    frame.CopyPixels(new Int32Rect(0, 0, width, height), pixelData, width * 4, 0);
+                    for (int i = 0; i < 16 * 16; i++)
+                    {
+                        byte r = pixelData[i * 4 + 2];
+                        byte g = pixelData[i * 4 + 1];
+                        byte b = pixelData[i * 4];
+                        m_matViewModel.MatColors[j].Add(new LedState(new SolidColorBrush(Color.FromRgb(r, g, b))));
+                    }
+                    j++;
+                }
             }
         }
+
         private void ConnectCommand(object sender, RoutedEventArgs e)
         {
             if(m_bIsConnected)
             {
-                m_serialPort.Close();
+                m_serialPort?.Close();
                 ButtonConnect.Content = "Connect";
                 PortsComboBox.IsEnabled = true;
                 m_bIsConnected = false;
@@ -113,12 +156,13 @@ namespace GifApp
             }
         }
 
-        static void RunTask()
+        protected void RunTask()
         {
             while (true)
             {
                 // Do some work here
                 //SendData();
+                m_matViewModel.GetPorts();
 
                 // Delay for 50 milliseconds
                 Thread.Sleep(50);
@@ -127,28 +171,31 @@ namespace GifApp
 
         private void SendCommand(object sender, RoutedEventArgs e)
         {
-            byte[] bytes = new byte[16 * 16 * 3]; // Assuming RGB format
+            // Accumulate the bytes
+            List<byte> byteList = new List<byte>();
 
+            byteList.Add(1); // TODO num of frames
+            byteList.Add(1); // TODO image / text / gif
             // Loop through the matrix and convert each hex value to bytes
-            for (int y = 0; y < 16; y++)
+            foreach (int rgbValue in arrPokeball)
             {
-                for (int x = 0; x < 16; x++)
-                {
-                    int colorValue = arrPokeball[x, y]; // Get the color value from the matrix
+                // Convert the RGB value to bytes
+                byte red = (byte)((rgbValue >> 16) & 0xFF);
+                byte green = (byte)((rgbValue >> 8) & 0xFF);
+                byte blue = (byte)(rgbValue & 0xFF);
 
-                    // Convert the color value to bytes
-                    byte r = (byte)((colorValue >> 16) & 0xFF); // Red component
-                    byte g = (byte)((colorValue >> 8) & 0xFF); // Green component
-                    byte b = (byte)(colorValue & 0xFF); // Blue component
-
-                    // Copy the color bytes to the main byte array
-                    int index = (y * 16 + x) * 3;
-                    bytes[index] = r;
-                    bytes[index + 1] = g;
-                    bytes[index + 2] = b;
-                }
+                // Append the bytes to the byte list
+                byteList.Add(red);
+                byteList.Add(green);
+                byteList.Add(blue);
             }
-            m_serialPort.Write(bytes, 0, bytes.Length);
+            foreach (byte b in byteList)
+            {
+                Console.WriteLine(b);
+            }
+
+            // Write the accumulated bytes to the serial port
+            m_serialPort?.Write(byteList.ToArray(), 0, byteList.Count);
         }
         private void SendData()
         {
@@ -159,7 +206,65 @@ namespace GifApp
             BinaryReader binary = new BinaryReader(fileStream, Encoding.GetEncoding(28591));
 
             //at this point I write to the port
-            m_serialPort.Write(binary.ReadBytes((int)fileStream.Length), 0, (int)fileStream.Length);
+            m_serialPort?.Write(binary.ReadBytes((int)fileStream.Length), 0, (int)fileStream.Length);
+        }
+        private void ConvertImage(string strImagePath)
+        {
+            string strExt = System.IO.Path.GetExtension(strImagePath);
+            SetDisplay(strExt);
+            m_strPath = "C:\\Workspace\\Technion\\GifLamp\\GifApp\\GifApp\\Resources\\current" + strExt;
+            ProcessImageSettings settings = new ProcessImageSettings
+            {
+                Width = 16,
+                Height = 16
+            };
+            MagicImageProcessor.ProcessImage(strImagePath, m_strPath, settings);
+        }
+
+        public void SetDisplay(string strExt)
+        {
+            DisplaySettings eDisplay = DisplaySettings.NONE;
+            switch(strExt)
+            {
+                case ".jpg":
+                case ".png":
+                case ".bmp":
+                    eDisplay = DisplaySettings.IMAGE; break;
+                case ".gif": 
+                    eDisplay = DisplaySettings.GIF; break;
+            }
+            m_matViewModel.DisplaySetting = eDisplay;
+        }
+
+        public static byte[] ResizeImageBytes(byte[] imageBytes, int newWidth, int newHeight)
+        {
+            using (MemoryStream outStream = new MemoryStream())
+            {
+                ProcessImageSettings processImageSettings = new ProcessImageSettings()
+                {
+                    Width = newWidth,
+                    Height = newHeight,
+                    ResizeMode = CropScaleMode.Stretch,
+                    HybridMode = HybridScaleMode.Turbo
+                };
+                MagicImageProcessor.ProcessImage(imageBytes, outStream, processImageSettings);
+                return outStream.ToArray();
+            }
+        }
+
+        private static int GetFrameDelay(BitmapFrame frame)
+        {
+            BitmapMetadata metadata = (BitmapMetadata)frame.Metadata;
+            string delayProperty = "/grctlext/Delay";
+            if (metadata.ContainsQuery(delayProperty))
+            {
+                object delayValue = metadata.GetQuery(delayProperty);
+                if (delayValue is int delay)
+                {
+                    return delay;
+                }
+            }
+            return 0;
         }
     }
 }
