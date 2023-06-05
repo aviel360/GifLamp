@@ -1,8 +1,8 @@
 import sys
 from PIL import Image
 
-MAX_WIDTH = 16
-MAX_HIGHT = 16
+MAX_WIDTH = 32
+MAX_HIGHT = 32
 
 
 if __name__ == "__main__":
@@ -14,8 +14,8 @@ if __name__ == "__main__":
 	print(f'Original Size is {orgFullGif.size}')
 	print(f'and the number of frames is {orgFullGif.n_frames}')
 	
-	resizeToWidth = MAX_WIDTH if orgFullGif.size[0] > MAX_WIDTH else orgFullGif.size[0]
-	resizeToHight = MAX_HIGHT if orgFullGif.size[1] > MAX_HIGHT else orgFullGif.size[1]
+	resizeToWidth = MAX_WIDTH# if orgFullGif.size[0] > MAX_WIDTH else orgFullGif.size[0]
+	resizeToHight = MAX_HIGHT# if orgFullGif.size[1] > MAX_HIGHT else orgFullGif.size[1]
 	
 	resizedFullGif = []
 	for i in range(orgFullGif.n_frames):
@@ -28,8 +28,8 @@ if __name__ == "__main__":
 		dstAnimation.write(resizeToWidth.to_bytes(1, 'little')) #widthSize
 		dstAnimation.write(resizeToHight.to_bytes(1, 'little')) #higthSize
 		for im in resizedFullGif:
-			for i in range(resizeToWidth):
-				for j in range(resizeToHight):
+			for i in range(resizeToHight):
+				for j in range(resizeToWidth):
 					r, g, b = im.getpixel((j, i))
 					val = (r << 16) | (g << 8) | b
 					dstAnimation.write(val.to_bytes(4, 'little'))

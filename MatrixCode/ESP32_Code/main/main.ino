@@ -5,14 +5,16 @@
 #include "TestPatterns.h"
 
 ///Panel Parameters
-#define DEFAULT_GIF_PANEL_WIDTH						   (16u)
-#define DEFAULT_GIF_PANEL_HIGHT						   (16u)
+#define SINGLE_MATRIX_TILE_WIDTH             (16u)
+#define SINGLE_MATRIX_TILE_HIGHT             (16u)
 
-#define EFFECTIVE_GIF_PANEL_WIDTH						 (16u)
-#define EFFECTIVE_GIF_PANEL_HIGHT						 (16u)
+#define HORIZONTAL_TILES_AMOUNT              (2u)
+#define VERTICAL_TILES_AMOUNT                (2u)
+
+#define DEFAULT_GIF_PANEL_WIDTH						   (SINGLE_MATRIX_TILE_WIDTH * HORIZONTAL_TILES_AMOUNT)
+#define DEFAULT_GIF_PANEL_HIGHT						   (SINGLE_MATRIX_TILE_HIGHT * VERTICAL_TILES_AMOUNT)
 
 #define DEFAULT_LEDS_AMOUNT_IN_STRIP         (DEFAULT_GIF_PANEL_WIDTH * DEFAULT_GIF_PANEL_HIGHT)
-#define EFFECTIVE_LEDS_AMOUNT_IN_STRIP       (EFFECTIVE_GIF_PANEL_HIGHT  * EFFECTIVE_GIF_PANEL_HIGHT)
 #define DEFAULT_GIF_PANEL_PIN						     (5u)
 
 ///Panel default programming
@@ -20,9 +22,8 @@
 #define DEFAULT_GIF_PANEL_BRIGHTNESS				        (40u)
 #define DEFAULT_GIF_PANEL_STARTUP_FILL_SCREEN_COLOR	(0u)
 
-#define MAX_FRAMES_ACCEPTED                         (60u)
+#define MAX_FRAMES_ACCEPTED                         (10u)
 
-static uint16_t standartIndexToReal[DEFAULT_LEDS_AMOUNT_IN_STRIP] = {0};
 static bool isTestPatternMode = true;
 static bool isImageChanged = false;
 static bool isAnimationMode = false;
@@ -45,59 +46,47 @@ typedef struct{
 } WrittenAnimation;
 #pragma pack(0)
 
-Adafruit_NeoPixel GifPanel(DEFAULT_LEDS_AMOUNT_IN_STRIP, DEFAULT_GIF_PANEL_PIN, NEO_GRB + NEO_KHZ800);
-
-static void initIndexArray(uint8_t requestedHight, uint8_t requestedWidth){
-  uint8_t rowOffset = (DEFAULT_GIF_PANEL_WIDTH - requestedWidth) / 2;
-  uint8_t colOffset = (DEFAULT_GIF_PANEL_HIGHT - requestedHight) / 2;
-
-  for(uint8_t i = 0; i < requestedHight; ++i){
-    for(uint8_t j = 0; j < requestedWidth; ++j){
-      uint16_t currIndex = (i * requestedHight) + j;
-      if(i % 2 == 0){
-        standartIndexToReal[currIndex] = colOffset + ((i + rowOffset) * DEFAULT_GIF_PANEL_HIGHT) + j;
-      }
-      else{
-        standartIndexToReal[currIndex] = ((i + 1 + rowOffset) * DEFAULT_GIF_PANEL_HIGHT) - j - 1 - colOffset;
-      }
-    }
-  }
-}
+Adafruit_NeoMatrix GifMatrix(16, 16, 2, 2, DEFAULT_GIF_PANEL_PIN,
+    NEO_MATRIX_BOTTOM    + NEO_MATRIX_RIGHT +
+    NEO_MATRIX_COLUMNS   + NEO_MATRIX_ZIGZAG + 
+    NEO_TILE_TOP         + NEO_TILE_RIGHT +  NEO_TILE_PROGRESSIVE,
+    NEO_GRB              + NEO_KHZ800 );
 
 WrittenAnimation animation = {0};
 
 void GifControl_loadTestPattern(void){
   const uint8_t TP_Amount = 4;
+  const uint32_t tpSize = 16 * 16;
   static uint8_t currTP = 0;
 
   switch(currTP){
     case 0:
       animation.framesAmount = 1;
-      memcpy(animation.frame[0].frameImage, tp_marioPlanePattern, EFFECTIVE_LEDS_AMOUNT_IN_STRIP * sizeof(uint32_t));
+      memcpy(animation.frame[0].frameImage, tp_marioPlanePattern, tpSize * sizeof(uint32_t));
       animation.frame[0].frameDuration = 1000;
-      animation.widthSize = EFFECTIVE_GIF_PANEL_WIDTH;
-      animation.hightSize = EFFECTIVE_GIF_PANEL_HIGHT;
+      animation.widthSize = 16;
+      animation.hightSize = 16;
       break;
     case 1:
       animation.framesAmount = 1;
-      memcpy(animation.frame[0].frameImage, tp_marioFlowerPattern, EFFECTIVE_LEDS_AMOUNT_IN_STRIP * sizeof(uint32_t));
+      memcpy(animation.frame[0].frameImage, tp_marioFlowerPattern, tpSize * sizeof(uint32_t));
       animation.frame[0].frameDuration = 1000;
-      animation.widthSize = EFFECTIVE_GIF_PANEL_WIDTH;
-      animation.hightSize = EFFECTIVE_GIF_PANEL_HIGHT;
+      animation.widthSize = 16;
+      animation.hightSize = 16;
       break;
     case 2:
       animation.framesAmount = 1;
-      memcpy(animation.frame[0].frameImage, tp_marioGhostPattern, EFFECTIVE_LEDS_AMOUNT_IN_STRIP * sizeof(uint32_t));
+      memcpy(animation.frame[0].frameImage, tp_marioGhostPattern, tpSize * sizeof(uint32_t));
       animation.frame[0].frameDuration = 1000;
-      animation.widthSize = EFFECTIVE_GIF_PANEL_WIDTH;
-      animation.hightSize = EFFECTIVE_GIF_PANEL_HIGHT;
+      animation.widthSize = 16;
+      animation.hightSize = 16;
       break;
     case 3:
       animation.framesAmount = 1;
-      memcpy(animation.frame[0].frameImage, tp_pokeballPattern, EFFECTIVE_LEDS_AMOUNT_IN_STRIP * sizeof(uint32_t));
+      memcpy(animation.frame[0].frameImage, tp_pokeballPattern, tpSize * sizeof(uint32_t));
       animation.frame[0].frameDuration = 1000;
-      animation.widthSize = EFFECTIVE_GIF_PANEL_WIDTH;
-      animation.hightSize = EFFECTIVE_GIF_PANEL_HIGHT;
+      animation.widthSize = 16;
+      animation.hightSize = 16;
       break;
     default:
       animation.framesAmount = 0;
@@ -114,17 +103,22 @@ void GifControl_loadAnimation(void){
   }
 
   if(isImageChanged){
-    initIndexArray(animation.widthSize, animation.hightSize);
+    uint8_t startCol = (DEFAULT_GIF_PANEL_WIDTH - animation.widthSize) / 2;
+    uint8_t startRow = (DEFAULT_GIF_PANEL_WIDTH - animation.hightSize) / 2;
     uint16_t pixelAmount = animation.widthSize * animation.hightSize;
 
     for(int currFrame = 0; currFrame < animation.framesAmount; ++currFrame){
-      GifPanel.clear();
-      for(int currPixel = 0; currPixel < pixelAmount; ++currPixel){
-        // GifPanel.setPixelColor(standartIndexToReal[i], nextImageToShow[i]);
-        uint32_t correctColorRGB = GifPanel.gamma32(animation.frame[currFrame].frameImage[currPixel]);
-        GifPanel.setPixelColor(standartIndexToReal[currPixel], correctColorRGB);
+      GifMatrix.clear();
+      uint32_t currPixel = 0;
+      for(uint8_t col = startCol; col < startCol + animation.widthSize; ++col){
+        for(uint8_t row = startRow; row < startRow + animation.hightSize; ++row){
+          uint32_t RGB_24bits = animation.frame[currFrame].frameImage[currPixel];
+          uint16_t correctColorRGB = GifMatrix.Color(((RGB_24bits >> 16) & 0xFF), ((RGB_24bits >> 8) & 0xFF), (RGB_24bits & 0xFF));
+          GifMatrix.drawPixel(row, col, correctColorRGB);
+          currPixel++;
+        }
       }
-      GifPanel.show();
+      GifMatrix.show();
 
       delay(animation.frame[currFrame].frameDuration);
     }
@@ -164,29 +158,28 @@ public:
 
 static getDataFromUART basic_UartDataRead(&animation);
 
-void GifControl_initPanel(void){
-	GifPanel.begin();
-  GifPanel.setBrightness(DEFAULT_GIF_PANEL_BRIGHTNESS);
-	GifPanel.clear();
-  GifPanel.fill();
-	GifPanel.show();
-  
+void GifControl_initMatrix(void){
+  GifMatrix.begin();
+  GifMatrix.setTextWrap(false);
+  GifMatrix.setBrightness(DEFAULT_GIF_PANEL_BRIGHTNESS);
+  GifMatrix.clear();
+  GifMatrix.show();
+
   delay(5);
 }
 
-void setup() {
+void setup(){
   Serial.begin(921600);
   Serial.onReceive(basic_UartDataRead);
+  GifControl_initMatrix();
 
-  // put your setup code here, to run once:
-  GifControl_initPanel();
   animation.type = 1;
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
   GifControl_loadAnimation();
 }
+
 
 // void writeFrameToBuffer(void){
 //   Serial.readBytes(&animation.type, sizeof(uint8_t));
