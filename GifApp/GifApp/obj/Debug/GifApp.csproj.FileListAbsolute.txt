@@ -76,8 +76,6 @@ C:\Workspace\GifLamp\Application\Application\GifApp\GifApp\obj\Debug\GifApp.cspr
 C:\Workspace\GifLamp\Application\Application\GifApp\GifApp\obj\Debug\GifApp.csproj.CopyComplete
 C:\Workspace\GifLamp\Application\Application\GifApp\GifApp\obj\Debug\GifApp.exe
 C:\Workspace\GifLamp\Application\Application\GifApp\GifApp\obj\Debug\GifApp.pdb
-C:\Workspace\Technion\GifLamp\GifApp\GifApp\obj\Debug\View\SettingsView.g.cs
-C:\Workspace\Technion\GifLamp\GifApp\GifApp\obj\Debug\View\SettingsView.baml
 C:\Workspace\GifLamp\GifApp\GifApp\bin\Debug\GifApp.exe.config
 C:\Workspace\GifLamp\GifApp\GifApp\bin\Debug\GifApp.exe
 C:\Workspace\GifLamp\GifApp\GifApp\bin\Debug\GifApp.pdb
@@ -118,3 +116,15 @@ C:\Workspace\GifLamp\GifApp\GifApp\obj\Debug\GifApp.csproj.CoreCompileInputs.cac
 C:\Workspace\GifLamp\GifApp\GifApp\obj\Debug\GifApp.csproj.CopyComplete
 C:\Workspace\GifLamp\GifApp\GifApp\obj\Debug\GifApp.exe
 C:\Workspace\GifLamp\GifApp\GifApp\obj\Debug\GifApp.pdb
+C:\Workspace\Technion\GifLamp\GifApp\GifApp\bin\Debug\IndexRange.dll
+C:\Workspace\Technion\GifLamp\GifApp\GifApp\bin\Debug\PhotoSauce.MagicScaler.dll
+C:\Workspace\Technion\GifLamp\GifApp\GifApp\bin\Debug\System.Buffers.dll
+C:\Workspace\Technion\GifLamp\GifApp\GifApp\bin\Debug\System.Memory.dll
+C:\Workspace\Technion\GifLamp\GifApp\GifApp\bin\Debug\System.Numerics.Vectors.dll
+C:\Workspace\Technion\GifLamp\GifApp\GifApp\bin\Debug\System.Runtime.CompilerServices.Unsafe.dll
+C:\Workspace\Technion\GifLamp\GifApp\GifApp\bin\Debug\PhotoSauce.MagicScaler.xml
+C:\Workspace\Technion\GifLamp\GifApp\GifApp\bin\Debug\System.Buffers.xml
+C:\Workspace\Technion\GifLamp\GifApp\GifApp\bin\Debug\System.Memory.xml
+C:\Workspace\Technion\GifLamp\GifApp\GifApp\bin\Debug\System.Numerics.Vectors.xml
+C:\Workspace\Technion\GifLamp\GifApp\GifApp\bin\Debug\System.Runtime.CompilerServices.Unsafe.xml
+C:\Workspace\Technion\GifLamp\GifApp\GifApp\obj\Debug\GifApp_Content.g.cs
