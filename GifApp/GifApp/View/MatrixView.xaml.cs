@@ -23,6 +23,8 @@ using static GifApp.MatrixViewModel;
 using System.Drawing.Imaging;
 using System.Windows.Media.Media3D;
 using System.Collections.ObjectModel;
+using GifApp.Properties;
+using ImageMagick;
 
 #nullable enable
 
@@ -33,6 +35,7 @@ namespace GifApp
     /// </summary>
     public partial class MatrixView : UserControl
     {
+        const int MATRIX_SIZE = 32;
 
         protected int[] arrPokeball =
 {
@@ -58,7 +61,6 @@ namespace GifApp
         protected SerialPort? m_serialPort;
         protected bool m_bIsConnected = false;
         protected MatrixViewModel m_matViewModel;
-        protected string m_strPath;
 
         public MatrixView()
         {
@@ -83,7 +85,7 @@ namespace GifApp
                 clickedRectangle.Fill = (SolidColorBrush)(new BrushConverter().ConvertFrom(m_colorCurrentBrush) ?? clickedRectangle.Fill);
             }
         }
-        private async void UploadCommand(object sender, RoutedEventArgs e)
+        private void UploadCommand(object sender, RoutedEventArgs e)
         {
            // try
             //{
@@ -92,47 +94,15 @@ namespace GifApp
                 
                 if (dialog.ShowDialog() ?? false)
                 {
-                    await Task.Run(() => ConvertImage(dialog.FileName));
-                    SplitGif(m_strPath);
-
-            }
-
+                    //Task.Run(() => ConvertImage(dialog.FileName));
+                    ConvertImage(dialog.FileName);
+                }
             //}
             //catch (Exception)
             //{
 
             // }
         }
-
-        public void SplitGif(string strPath)
-        {
-            using (FileStream stream = new FileStream(strPath, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
-                int j = 0;
-                foreach (BitmapFrame frame in decoder.Frames)
-                {
-                    if (j > 0)
-                    {
-                        m_matViewModel.MatFrame.Add(j.ToString());
-                        m_matViewModel.MatColors.Add(new ObservableCollection<LedState>());
-                    }
-                    int width = (int)frame.Width;
-                    int height = (int)frame.Height;
-                    byte[] pixelData = new byte[width * height * 4];
-                    frame.CopyPixels(new Int32Rect(0, 0, width, height), pixelData, width * 4, 0);
-                    for (int i = 0; i < 16 * 16; i++)
-                    {
-                        byte r = pixelData[i * 4 + 2];
-                        byte g = pixelData[i * 4 + 1];
-                        byte b = pixelData[i * 4];
-                        m_matViewModel.MatColors[j].Add(new LedState(new SolidColorBrush(Color.FromRgb(r, g, b))));
-                    }
-                    j++;
-                }
-            }
-        }
-
         private void ConnectCommand(object sender, RoutedEventArgs e)
         {
             if(m_bIsConnected)
@@ -208,17 +178,93 @@ namespace GifApp
             //at this point I write to the port
             m_serialPort?.Write(binary.ReadBytes((int)fileStream.Length), 0, (int)fileStream.Length);
         }
-        private void ConvertImage(string strImagePath)
+        private async void ConvertImage(string strImagePath)
         {
             string strExt = System.IO.Path.GetExtension(strImagePath);
+            string strPath = "C:\\Workspace\\Technion\\GifLamp\\GifApp\\GifApp\\Resources\\current" + strExt;
+            int iHeight;
+            int iWidth;
             SetDisplay(strExt);
-            m_strPath = "C:\\Workspace\\Technion\\GifLamp\\GifApp\\GifApp\\Resources\\current" + strExt;
-            ProcessImageSettings settings = new ProcessImageSettings
+            using (FileStream stream = new FileStream(strImagePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                Width = 16,
-                Height = 16
-            };
-            MagicImageProcessor.ProcessImage(strImagePath, m_strPath, settings);
+                // Get the first frame of the GIF (assuming it's a single-frame GIF)
+                GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+                BitmapFrame frame = decoder.Frames[0];
+
+                // Get the height and width of the frame
+                iHeight = frame.PixelHeight;
+                iWidth = frame.PixelWidth;
+            }
+            ProcessImageSettings imgSettings = GetImageSettings(iWidth, iHeight);
+            await Task.Run(() => (MagicImageProcessor.ProcessImage(strImagePath, @"..\..\Resources\current.gif", imgSettings)));
+            using (FileStream stream = new FileStream(@"..\..\Resources\current.gif", FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+                ObservableCollection<ObservableCollection<LedState>> matColors = new ObservableCollection<ObservableCollection<LedState>>();
+                List<string> matFrame = new List<string> { };
+
+                using (MagickImageCollection collection = new MagickImageCollection(@"..\..\Resources\current.gif"))
+                {
+                    int j = 0;
+                    // Iterate over each frame in the GIF
+                    foreach (MagickImage frame in collection)
+                    {
+                        // Iterate over the pixels of the frame
+                        iWidth = (int)frame.Width;
+                        iHeight = (int)frame.Height;
+                        int startCol = (MATRIX_SIZE - iWidth) / 2;
+                        int startRow = (MATRIX_SIZE - iHeight) / 2;
+                        matFrame.Add(j.ToString());
+                        matColors.Add(new ObservableCollection<LedState>());
+                        IPixelCollection<ushort> pixels = frame.GetPixels();
+                        IEnumerator<IPixel<ushort>> ePixels = pixels.GetEnumerator();
+                        for (int row = 0; row < MATRIX_SIZE; row++)
+                        {
+                            for (int col = 0; col < MATRIX_SIZE; col++)
+                            {
+                                LedState ledState;
+                                if (row < startRow || row > iWidth || col < startRow || col > iHeight)
+                                {
+                                    ledState = new LedState();
+                                }
+                                else
+                                {
+                                    ePixels.MoveNext();
+                                    IMagickColor<ushort> color = ePixels.Current.ToColor();
+                                    byte r = (byte)color.R;
+                                    byte g = (byte)color.G;
+                                    byte b = (byte)color.B;
+                                    ledState = new LedState(new SolidColorBrush(Color.FromRgb(r, g, b)));
+                                }
+                                matColors[j].Add(ledState);
+                            }
+                        }
+                        j++;
+                    }
+                    m_matViewModel.MatFrame = matFrame;
+                    m_matViewModel.MatColors = matColors;
+                }
+            }
+        }
+
+        private ProcessImageSettings GetImageSettings(int iWidth, int iHeight)
+        {
+            ProcessImageSettings imgSettings;
+            if (iWidth > iHeight)
+            {
+                imgSettings = new ProcessImageSettings
+                {
+                    Width = MATRIX_SIZE
+                };
+            }
+            else
+            {
+                imgSettings = new ProcessImageSettings
+                {
+                    Height = MATRIX_SIZE
+                };
+            }
+            return imgSettings;
         }
 
         public void SetDisplay(string strExt)

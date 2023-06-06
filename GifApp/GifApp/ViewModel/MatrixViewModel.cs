@@ -69,7 +69,11 @@ namespace GifApp
         public string MatFrameCurrent
         {
             get { return m_MatFrameCurrent; }
-            set { SetProperty(ref m_MatFrameCurrent, value); }
+            set 
+            {
+                MatColorsCurrent = MatColors[int.Parse(value)];
+                SetProperty(ref m_MatFrameCurrent, value); 
+            }
         }
 
         public List<string> AnimationSpeed
