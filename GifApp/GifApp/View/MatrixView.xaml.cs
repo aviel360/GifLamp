@@ -88,7 +88,7 @@ namespace GifApp
         private void UploadCommand(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = "Image files (*.bmp, *.jpg, *.gif, *.png)|*.bmp;*.jpg;*.png;*.gif|All files (*.*)|*.*";
+            dialog.Filter = "Image files (*.bmp, *.jpg, *.jpeg, *.gif, *.png)|*.bmp;*.jpg;*.jpeg;*.png;*.gif|All files (*.*)|*.*";
 
             if (dialog.ShowDialog() ?? false)
             {
@@ -198,13 +198,13 @@ namespace GifApp
 
         private void ConvertImage(string strExt)
         {
-            using (FileStream stream = new FileStream(@"..\..\Resources\current" + strExt, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (FileStream stream = new FileStream(@"..\..\Resources\current.gif", FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
                 ObservableCollection<MatrixFrame> matColors = new ObservableCollection<MatrixFrame>();
                 List<string> matFrame = new List<string> { };
 
-                using (MagickImageCollection collection = new MagickImageCollection(@"..\..\Resources\current" + strExt))
+                using (MagickImageCollection collection = new MagickImageCollection(@"..\..\Resources\current.gif"))
                 {
                     int j = 0;
                     // Iterate over each frame in the GIF
