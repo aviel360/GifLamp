@@ -87,22 +87,23 @@ namespace GifApp
         }
         private void UploadCommand(object sender, RoutedEventArgs e)
         {
-           // try
-            //{
-                OpenFileDialog dialog = new OpenFileDialog();
-                dialog.Filter = "Image files (*.bmp, *.jpg, *.gif, *.png)|*.bmp;*.jpg;*.png;*.gif|All files (*.*)|*.*";
-                
-                if (dialog.ShowDialog() ?? false)
-                {
-                    //Task.Run(() => ConvertImage(dialog.FileName));
-                    ConvertImage(dialog.FileName);
-                }
-            //}
-            //catch (Exception)
-            //{
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.Filter = "Image files (*.bmp, *.jpg, *.gif, *.png)|*.bmp;*.jpg;*.png;*.gif|All files (*.*)|*.*";
 
-            // }
+            if (dialog.ShowDialog() ?? false)
+            {
+                ConvertImage(ResizeImage(dialog.FileName));
+            }
+            try
+            {
+
+            }
+            catch (Exception)
+            {
+
+            }
         }
+
         private void ConnectCommand(object sender, RoutedEventArgs e)
         {
             if(m_bIsConnected)
@@ -142,28 +143,26 @@ namespace GifApp
         private void SendCommand(object sender, RoutedEventArgs e)
         {
             // Accumulate the bytes
-            List<byte> byteList = new List<byte>();
-
-            byteList.Add(1); // TODO num of frames
-            byteList.Add(1); // TODO image / text / gif
+            List<byte> byteList = new List<byte>
+            {
+                (byte)m_matViewModel.MatFrame.Count(), // TODO num of frames
+                (byte)m_matViewModel.DisplaySetting
+            };
             // Loop through the matrix and convert each hex value to bytes
-            foreach (int rgbValue in arrPokeball)
+           // foreach (m_matColors)
+            foreach(MatrixFrame matFrame in m_matViewModel.MatColors)
             {
-                // Convert the RGB value to bytes
-                byte red = (byte)((rgbValue >> 16) & 0xFF);
-                byte green = (byte)((rgbValue >> 8) & 0xFF);
-                byte blue = (byte)(rgbValue & 0xFF);
-
-                // Append the bytes to the byte list
-                byteList.Add(red);
-                byteList.Add(green);
-                byteList.Add(blue);
+                foreach(LedState ledPixel in matFrame.MatPixels)
+                {
+                    SolidColorBrush rgbValue = ledPixel.Color as SolidColorBrush;
+                    byteList.Add((byte)rgbValue.Color.R);
+                    byteList.Add((byte)rgbValue.Color.G);
+                    byteList.Add((byte)rgbValue.Color.B);
+                }
+                string strSpeed = m_matViewModel.AnimationSpeedCurrent.Replace("x", "");
+                float.TryParse(strSpeed, out float iSpeed);
+                byteList.Add((byte)(matFrame.iFrameDelay * iSpeed));
             }
-            foreach (byte b in byteList)
-            {
-                Console.WriteLine(b);
-            }
-
             // Write the accumulated bytes to the serial port
             m_serialPort?.Write(byteList.ToArray(), 0, byteList.Count);
         }
@@ -178,44 +177,48 @@ namespace GifApp
             //at this point I write to the port
             m_serialPort?.Write(binary.ReadBytes((int)fileStream.Length), 0, (int)fileStream.Length);
         }
-        private async void ConvertImage(string strImagePath)
+
+
+        private string ResizeImage(string strImagePath)
         {
             string strExt = System.IO.Path.GetExtension(strImagePath);
-            string strPath = "C:\\Workspace\\Technion\\GifLamp\\GifApp\\GifApp\\Resources\\current" + strExt;
-            int iHeight;
-            int iWidth;
-            SetDisplay(strExt);
-            using (FileStream stream = new FileStream(strImagePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                // Get the first frame of the GIF (assuming it's a single-frame GIF)
-                GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
-                BitmapFrame frame = decoder.Frames[0];
 
-                // Get the height and width of the frame
-                iHeight = frame.PixelHeight;
-                iWidth = frame.PixelWidth;
+            SetDisplay(strExt);
+            using (var collection = new MagickImageCollection(new FileInfo(strImagePath)))
+            {
+                collection.Coalesce();
+                foreach (var image in collection)
+                {
+                    image.Resize(MATRIX_SIZE, 0);
+                }
+                collection.Write(@"..\..\Resources\current.gif");
             }
-            ProcessImageSettings imgSettings = GetImageSettings(iWidth, iHeight);
-            await Task.Run(() => (MagicImageProcessor.ProcessImage(strImagePath, @"..\..\Resources\current.gif", imgSettings)));
-            using (FileStream stream = new FileStream(@"..\..\Resources\current.gif", FileMode.Open, FileAccess.Read, FileShare.Read))
+            return strExt;
+        }
+
+        private void ConvertImage(string strExt)
+        {
+            using (FileStream stream = new FileStream(@"..\..\Resources\current" + strExt, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
-                ObservableCollection<ObservableCollection<LedState>> matColors = new ObservableCollection<ObservableCollection<LedState>>();
+                ObservableCollection<MatrixFrame> matColors = new ObservableCollection<MatrixFrame>();
                 List<string> matFrame = new List<string> { };
 
-                using (MagickImageCollection collection = new MagickImageCollection(@"..\..\Resources\current.gif"))
+                using (MagickImageCollection collection = new MagickImageCollection(@"..\..\Resources\current" + strExt))
                 {
                     int j = 0;
                     // Iterate over each frame in the GIF
                     foreach (MagickImage frame in collection)
                     {
                         // Iterate over the pixels of the frame
-                        iWidth = (int)frame.Width;
-                        iHeight = (int)frame.Height;
+                        int iWidth = (int)frame.Width;
+                        int iHeight = (int)frame.Height;
                         int startCol = (MATRIX_SIZE - iWidth) / 2;
                         int startRow = (MATRIX_SIZE - iHeight) / 2;
                         matFrame.Add(j.ToString());
-                        matColors.Add(new ObservableCollection<LedState>());
+                        MatrixFrame matrixFrame = new MatrixFrame();
+                        matrixFrame.iFrameDelay = frame.AnimationDelay;
+                        matColors.Add(matrixFrame);
                         IPixelCollection<ushort> pixels = frame.GetPixels();
                         IEnumerator<IPixel<ushort>> ePixels = pixels.GetEnumerator();
                         for (int row = 0; row < MATRIX_SIZE; row++)
@@ -236,7 +239,7 @@ namespace GifApp
                                     byte b = (byte)color.B;
                                     ledState = new LedState(new SolidColorBrush(Color.FromRgb(r, g, b)));
                                 }
-                                matColors[j].Add(ledState);
+                                matColors[j].MatPixels.Add(ledState);
                             }
                         }
                         j++;
@@ -244,27 +247,8 @@ namespace GifApp
                     m_matViewModel.MatFrame = matFrame;
                     m_matViewModel.MatColors = matColors;
                 }
+                m_matViewModel.MatColorsCurrent = m_matViewModel.MatColors[0].MatPixels;
             }
-        }
-
-        private ProcessImageSettings GetImageSettings(int iWidth, int iHeight)
-        {
-            ProcessImageSettings imgSettings;
-            if (iWidth > iHeight)
-            {
-                imgSettings = new ProcessImageSettings
-                {
-                    Width = MATRIX_SIZE
-                };
-            }
-            else
-            {
-                imgSettings = new ProcessImageSettings
-                {
-                    Height = MATRIX_SIZE
-                };
-            }
-            return imgSettings;
         }
 
         public void SetDisplay(string strExt)
@@ -280,22 +264,6 @@ namespace GifApp
                     eDisplay = DisplaySettings.GIF; break;
             }
             m_matViewModel.DisplaySetting = eDisplay;
-        }
-
-        public static byte[] ResizeImageBytes(byte[] imageBytes, int newWidth, int newHeight)
-        {
-            using (MemoryStream outStream = new MemoryStream())
-            {
-                ProcessImageSettings processImageSettings = new ProcessImageSettings()
-                {
-                    Width = newWidth,
-                    Height = newHeight,
-                    ResizeMode = CropScaleMode.Stretch,
-                    HybridMode = HybridScaleMode.Turbo
-                };
-                MagicImageProcessor.ProcessImage(imageBytes, outStream, processImageSettings);
-                return outStream.ToArray();
-            }
         }
 
         private static int GetFrameDelay(BitmapFrame frame)

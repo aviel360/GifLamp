@@ -13,6 +13,17 @@ using System.IO.Ports;
 
 namespace GifApp
 {
+    public class MatrixFrame
+    {
+        public ObservableCollection<LedState> MatPixels;
+        public int iFrameDelay;
+
+        public MatrixFrame()
+        {
+            MatPixels = new ObservableCollection<LedState>();
+        }
+    }
+
     public class MatrixViewModel : BaseViewModel
     {   
 
@@ -26,7 +37,7 @@ namespace GifApp
         {
             GetPorts();
             InitMatrix();
-            MatColorsCurrent = MatColors[0];
+            MatColorsCurrent = MatColors[0].MatPixels;
         }
         #endregion
 
@@ -71,7 +82,7 @@ namespace GifApp
             get { return m_MatFrameCurrent; }
             set 
             {
-                MatColorsCurrent = MatColors[int.Parse(value)];
+                MatColorsCurrent = MatColors[int.Parse(value)].MatPixels;
                 SetProperty(ref m_MatFrameCurrent, value); 
             }
         }
@@ -86,7 +97,7 @@ namespace GifApp
             get { return m_AnimationSpeedCurrent; }
             set { SetProperty(ref m_AnimationSpeedCurrent, value); }
         }
-        public ObservableCollection<ObservableCollection<LedState>> MatColors
+        public ObservableCollection<MatrixFrame> MatColors
         {
             get { return m_matColors; }
             set { SetProperty(ref m_matColors, value); }
@@ -103,13 +114,15 @@ namespace GifApp
         #region Methods
         public void InitMatrix()
         {
-            MatColors = new ObservableCollection<ObservableCollection<LedState>>();
-            MatColors.Add(new ObservableCollection<LedState>());
+            MatColors = new ObservableCollection<MatrixFrame>
+            {
+                new MatrixFrame()
+            };
             for (int i = 0; i < 32; i++)
             {
                 for (int j = 0; j < 32; j++)
                 {
-                    MatColors[0].Add(new LedState());
+                    MatColors[0].MatPixels.Add(new LedState());
                 }
             }
         }
@@ -128,7 +141,7 @@ namespace GifApp
             for (int i = 0; i < 16*16; i++)
             {
                 System.Windows.Media.Color iColor = System.Windows.Media.Color.FromRgb((byte)((arrImage[i] >> 16) & 0xFF), (byte)((arrImage[i] >> 8) & 0xFF), (byte)(arrImage[i] & 0xFF));
-                MatColors[0][i].Color  = new SolidColorBrush(iColor);
+                MatColors[0].MatPixels[i].Color  = new SolidColorBrush(iColor);
             }
         }
 
@@ -153,7 +166,7 @@ namespace GifApp
         protected string m_AnimationSpeedCurrent = "x1";
         protected ObservableCollection<string> m_arrPorts = new ObservableCollection<string>();
         protected string m_PortCurrent = string.Empty;
-        protected ObservableCollection<ObservableCollection<LedState>> m_matColors = new ObservableCollection<ObservableCollection<LedState>>();
+        protected ObservableCollection<MatrixFrame> m_matColors = new ObservableCollection<MatrixFrame>();
         protected ObservableCollection<LedState> m_matColorsCurrent = new ObservableCollection<LedState>();
         protected DisplaySettings m_DisplaySettingCurrent = DisplaySettings.NONE;
         #endregion

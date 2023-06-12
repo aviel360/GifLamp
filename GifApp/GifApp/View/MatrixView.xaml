@@ -33,7 +33,7 @@
 
         <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,-10,0,0">
             <Label Content="Choose Frame" HorizontalAlignment="Center" FontSize="16" FontWeight="DemiBold" Margin="0,10,0,5"/>
-            <ComboBox x:Name="PortsComboBox2"  ItemsSource="{Binding MatFrame}" SelectedItem="{Binding MatFrameCurrent}" Width="100" Height="23"></ComboBox>
+            <ComboBox x:Name="PortsComboBox2"  ItemsSource="{Binding MatFrame}" SelectedItem="{Binding MatFrameCurrent, Mode=TwoWay}" Width="100" Height="23"></ComboBox>
         </StackPanel>
         
         <ItemsControl Grid.ColumnSpan="4" Grid.Row="1" ItemsSource="{Binding MatColorsCurrent}">
@@ -60,7 +60,7 @@
         <StackPanel Grid.Row="0" Grid.Column="0" Margin="10,-10,0,0">
             <Label Content="Serial Connect" HorizontalAlignment="Center" FontSize="16" FontWeight="DemiBold" Margin="0,10,0,5"/>
             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                <ComboBox x:Name="PortsComboBox"  ItemsSource="{Binding Ports}" SelectedItem="{Binding PortCurrent}" Width="100" Height="23"></ComboBox>
+                <ComboBox x:Name="PortsComboBox" ItemsSource="{Binding Ports}" SelectedItem="{Binding PortCurrent}" Width="100" Height="23"></ComboBox>
                 <Button x:Name="ButtonConnect" Click="ConnectCommand" Width="70" Height="23" Margin="30,0,0,0">Connect</Button>
             </StackPanel>
         </StackPanel>
