@@ -28,7 +28,7 @@ namespace GifApp
     {   
 
         #region Enums & Constants
-        public enum DisplaySettings { NONE = 0, IMAGE = 1, GIF = 2 };
+        public enum DisplaySettings { NONE = 0, GIF = 1, IMAGE = 2 };
 
         #endregion
 
@@ -42,7 +42,7 @@ namespace GifApp
         #endregion
 
         #region Properties
-        public ObservableCollection<string> Ports
+        public Array Ports
         {
             get { return m_arrPorts; }
             set { SetProperty(ref m_arrPorts, value); }
@@ -51,7 +51,10 @@ namespace GifApp
         public ObservableCollection<LedState> MatColorsCurrent
         {
             get { return m_matColorsCurrent; }
-            set { SetProperty(ref m_matColorsCurrent, value); }
+            set 
+            { 
+                SetProperty(ref m_matColorsCurrent, value); 
+            }
         }
 
         public string PortCurrent
@@ -82,6 +85,7 @@ namespace GifApp
             get { return m_MatFrameCurrent; }
             set 
             {
+                //MatColors[int.Parse(MatFrameCurrent)] .MatPixels = MatColorsCurrent;
                 MatColorsCurrent = MatColors[int.Parse(value)].MatPixels;
                 SetProperty(ref m_MatFrameCurrent, value); 
             }
@@ -128,11 +132,11 @@ namespace GifApp
         }
         public void GetPorts()
         {
-            Array arrPorts = SerialPort.GetPortNames();
-            foreach (string port in arrPorts)
-            {
-                Ports.Add(port);
-            }
+            Ports = SerialPort.GetPortNames();
+            //foreach (string port in arrPorts)
+            //{
+            //    Ports.Add(port);
+            //}
         }
 
         public void DisplayImage(int[] arrImage)
@@ -164,7 +168,7 @@ namespace GifApp
         protected string m_MatSizeCurrent = string.Empty;
         protected List<string> m_AnimationSpeed = new List<string> { "x0.5", "x1", "x1.5", "x2" };
         protected string m_AnimationSpeedCurrent = "x1";
-        protected ObservableCollection<string> m_arrPorts = new ObservableCollection<string>();
+        protected Array m_arrPorts;
         protected string m_PortCurrent = string.Empty;
         protected ObservableCollection<MatrixFrame> m_matColors = new ObservableCollection<MatrixFrame>();
         protected ObservableCollection<LedState> m_matColorsCurrent = new ObservableCollection<LedState>();

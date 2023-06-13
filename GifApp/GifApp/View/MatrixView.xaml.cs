@@ -25,6 +25,7 @@ using System.Windows.Media.Media3D;
 using System.Collections.ObjectModel;
 using GifApp.Properties;
 using ImageMagick;
+using System.Xml.Linq;
 
 #nullable enable
 
@@ -145,31 +146,45 @@ namespace GifApp
             // Accumulate the bytes
             List<byte> byteList = new List<byte>
             {
+                (byte)m_matViewModel.DisplaySetting,
                 (byte)m_matViewModel.MatFrame.Count(), // TODO num of frames
-                (byte)m_matViewModel.DisplaySetting
+                (byte)32,
+                (byte)32
             };
             // Loop through the matrix and convert each hex value to bytes
-           // foreach (m_matColors)
             foreach(MatrixFrame matFrame in m_matViewModel.MatColors)
             {
                 foreach(LedState ledPixel in matFrame.MatPixels)
                 {
-                    SolidColorBrush rgbValue = ledPixel.Color as SolidColorBrush;
-                    byteList.Add((byte)rgbValue.Color.R);
-                    byteList.Add((byte)rgbValue.Color.G);
+                    SolidColorBrush rgbValue = ledPixel.Color as SolidColorBrush ?? new SolidColorBrush(Colors.Black);
                     byteList.Add((byte)rgbValue.Color.B);
+                    byteList.Add((byte)rgbValue.Color.G);
+                    byteList.Add((byte)rgbValue.Color.R);
+                    byteList.Add(0);
                 }
                 string strSpeed = m_matViewModel.AnimationSpeedCurrent.Replace("x", "");
-                float.TryParse(strSpeed, out float iSpeed);
-                byteList.Add((byte)(matFrame.iFrameDelay * iSpeed));
+                float.TryParse(strSpeed, out float fSpeed);
+                fSpeed = 1 / fSpeed;
+                int iSpeed = (int)max(fSpeed * matFrame.iFrameDelay,1);
+                byte[] arrSpeed = BitConverter.GetBytes(iSpeed);
+                byteList.Add(arrSpeed[0]);
+                byteList.Add(arrSpeed[1]);
+                byteList.Add(arrSpeed[2]);
+                byteList.Add(arrSpeed[3]);
             }
             // Write the accumulated bytes to the serial port
             m_serialPort?.Write(byteList.ToArray(), 0, byteList.Count);
         }
-        private void SendData()
+
+        private float max(float v1, int v2)
+        {
+            return v1 > v2 ? v1 : v2;
+        }
+
+        private void SendCommand1(object sender, RoutedEventArgs e)
         {
             //open the file using file stream
-            FileStream fileStream = new FileStream(@"C:\Workspace\GifLamp\GifApp\GifApp\Resources\xw.bin", FileMode.Open, FileAccess.Read, FileShare.Read);
+            FileStream fileStream = new FileStream(@"..\..\Resources\6SstyNn.bin", FileMode.Open, FileAccess.Read, FileShare.Read);
 
             //store the open file as binary
             BinaryReader binary = new BinaryReader(fileStream, Encoding.GetEncoding(28591));
@@ -217,7 +232,7 @@ namespace GifApp
                         int startRow = (MATRIX_SIZE - iHeight) / 2;
                         matFrame.Add(j.ToString());
                         MatrixFrame matrixFrame = new MatrixFrame();
-                        matrixFrame.iFrameDelay = frame.AnimationDelay;
+                        matrixFrame.iFrameDelay = frame.AnimationDelay * 10;
                         matColors.Add(matrixFrame);
                         IPixelCollection<ushort> pixels = frame.GetPixels();
                         IEnumerator<IPixel<ushort>> ePixels = pixels.GetEnumerator();
