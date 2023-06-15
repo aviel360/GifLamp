@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-C:\Workspace\GifLamp\GifApp\GifApp\obj\Debug\
+C:\Workspace\Technion\GifLamp\GifApp\GifApp\obj\Debug\
 GifApp
 none
 false
 DEBUG;TRACE
-C:\Workspace\GifLamp\GifApp\GifApp\App.xaml
+C:\Workspace\Technion\GifLamp\GifApp\GifApp\App.xaml
 2809855998
-1-989996681
+
 111367512739
-28-1796498629
+31370735440
 MainWindow.xaml;View\MatrixView.xaml;
 
-True
+False
 

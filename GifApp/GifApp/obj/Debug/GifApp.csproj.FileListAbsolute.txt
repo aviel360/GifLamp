@@ -139,7 +139,6 @@ C:\Workspace\Technion\GifLamp\GifApp\GifApp\obj\Debug\GifApp.csproj.SuggestedBin
 C:\Workspace\Technion\GifLamp\GifApp\GifApp\obj\Debug\MainWindow.g.cs
 C:\Workspace\Technion\GifLamp\GifApp\GifApp\obj\Debug\View\MatrixView.g.cs
 C:\Workspace\Technion\GifLamp\GifApp\GifApp\obj\Debug\App.g.cs
-C:\Workspace\Technion\GifLamp\GifApp\GifApp\obj\Debug\GifApp_Content.g.cs
 C:\Workspace\Technion\GifLamp\GifApp\GifApp\obj\Debug\GeneratedInternalTypeHelper.g.cs
 C:\Workspace\Technion\GifLamp\GifApp\GifApp\obj\Debug\GifApp_MarkupCompile.cache
 C:\Workspace\Technion\GifLamp\GifApp\GifApp\obj\Debug\GifApp_MarkupCompile.lref
