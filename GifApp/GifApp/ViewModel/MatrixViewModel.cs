@@ -77,6 +77,7 @@ namespace GifApp
             get { return m_MatSizes; }
             set { SetProperty(ref m_MatSizes, value); }
         }
+
         public List<string> MatFrame
         {
             get { return m_MatFrame; }
@@ -98,6 +99,12 @@ namespace GifApp
                 MatColorsCurrent = MatColors[int.Parse(value)].MatPixels;
                 SetProperty(ref m_MatFrameCurrent, value); 
             }
+        }
+
+        public Color BrushColorCurrent
+        {
+            get { return m_colorBrush; }
+            set { SetProperty(ref m_colorBrush, value); }
         }
 
         public List<string> AnimationSpeed
@@ -182,6 +189,7 @@ namespace GifApp
         protected ObservableCollection<MatrixFrame> m_matColors = new ObservableCollection<MatrixFrame>();
         protected ObservableCollection<LedState> m_matColorsCurrent = new ObservableCollection<LedState>();
         protected DisplaySettings m_DisplaySettingCurrent = DisplaySettings.NONE;
+        protected Color m_colorBrush;
         #endregion
     }
 }

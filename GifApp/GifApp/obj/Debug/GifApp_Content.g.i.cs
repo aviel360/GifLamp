@@ -8,6 +8,6 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("resources/gif_tobin.py")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("resources/minus.png")]
 
 
