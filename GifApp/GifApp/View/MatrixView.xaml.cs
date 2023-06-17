@@ -26,6 +26,7 @@ using System.Collections.ObjectModel;
 using GifApp.Properties;
 using ImageMagick;
 using System.Xml.Linq;
+using System.Xml;
 
 #nullable enable
 
@@ -36,7 +37,6 @@ namespace GifApp
     /// </summary>
     public partial class MatrixView : UserControl
     {
-        const int MATRIX_SIZE = 32;
 
         protected int[] arrPokeball =
 {
@@ -204,7 +204,7 @@ namespace GifApp
                 collection.Coalesce();
                 foreach (var image in collection)
                 {
-                    image.Resize(MATRIX_SIZE, 0);
+                    image.Resize(MATRIX_HEIGHT, 0);
                 }
                 collection.Write(@"..\..\Resources\current.gif");
             }
@@ -217,7 +217,7 @@ namespace GifApp
             {
                 GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
                 ObservableCollection<MatrixFrame> matColors = new ObservableCollection<MatrixFrame>();
-                List<string> matFrame = new List<string> { };
+                List<string> matFrameCount = new List<string> { };
 
                 using (MagickImageCollection collection = new MagickImageCollection(@"..\..\Resources\current.gif"))
                 {
@@ -225,46 +225,99 @@ namespace GifApp
                     // Iterate over each frame in the GIF
                     foreach (MagickImage frame in collection)
                     {
-                        // Iterate over the pixels of the frame
-                        int iWidth = (int)frame.Width;
-                        int iHeight = (int)frame.Height;
-                        int startCol = (MATRIX_SIZE - iWidth) / 2;
-                        int startRow = (MATRIX_SIZE - iHeight) / 2;
-                        matFrame.Add(j.ToString());
-                        MatrixFrame matrixFrame = new MatrixFrame();
-                        matrixFrame.iFrameDelay = frame.AnimationDelay * 10;
-                        matColors.Add(matrixFrame);
+                        MatrixFrame matFrame = new MatrixFrame(Colors.Black);
+                        matFrameCount.Add(j.ToString());
+                        matFrame.iFrameDelay = frame.AnimationDelay * 10;
                         IPixelCollection<ushort> pixels = frame.GetPixels();
                         IEnumerator<IPixel<ushort>> ePixels = pixels.GetEnumerator();
-                        for (int row = 0; row < MATRIX_SIZE; row++)
+
+                        // Calculate the starting position in the 32x32 matrix
+                        int startX = (32 - frame.Width) / 2;
+                        int startY = (32 - frame.Height) / 2;
+
+                        // Iterate over the pixels of the image and assign RGB values to the matrix
+                        for (int row = 0; row < frame.Height; row++)
                         {
-                            for (int col = 0; col < MATRIX_SIZE; col++)
+                            for (int column = 0; column < frame.Width; column++)
                             {
-                                LedState ledState;
-                                if (row < startRow || row > iWidth || col < startRow || col > iHeight)
-                                {
-                                    ledState = new LedState();
-                                }
-                                else
-                                {
-                                    ePixels.MoveNext();
-                                    IMagickColor<ushort> color = ePixels.Current.ToColor();
-                                    byte r = (byte)color.R;
-                                    byte g = (byte)color.G;
-                                    byte b = (byte)color.B;
-                                    ledState = new LedState(new SolidColorBrush(Color.FromRgb(r, g, b)));
-                                }
-                                matColors[j].MatPixels.Add(ledState);
+                                // Get the RGB value of the pixel from the frame
+                                IMagickColor<ushort> color = ePixels.Current.ToColor();
+                                byte r = (byte)color.R;
+                                byte g = (byte)color.G;
+                                byte b = (byte)color.B;
+                                LedState ledState = new LedState(new SolidColorBrush(Color.FromRgb(r, g, b)));
+
+                                // Calculate the corresponding position in the matrix
+                                int matrixX = startX + column;
+                                int matrixY = startY + row;
+
+                                // Assign the RGB value to the corresponding position in the matrix
+                                int collectionIndex = (startY + row) * 32 + (startX + column);
+
+                                // Assign the RGB value to the corresponding position in the color collection
+                                matFrame.MatPixels[collectionIndex] = ledState;
                             }
                         }
-                        j++;
+                        matColors.Add(matFrame);
                     }
-                    m_matViewModel.MatFrame = matFrame;
-                    m_matViewModel.MatColors = matColors;
                 }
-                m_matViewModel.MatColorsCurrent = m_matViewModel.MatColors[0].MatPixels;
             }
         }
+
+        //private void ConvertImage(string strExt)
+        //{
+        //    using (FileStream stream = new FileStream(@"..\..\Resources\current.gif", FileMode.Open, FileAccess.Read, FileShare.Read))
+        //    {
+        //        GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+        //        ObservableCollection<MatrixFrame> matColors = new ObservableCollection<MatrixFrame>();
+        //        List<string> matFrame = new List<string> { };
+
+        //        using (MagickImageCollection collection = new MagickImageCollection(@"..\..\Resources\current.gif"))
+        //        {
+        //            int j = 0;
+        //            // Iterate over each frame in the GIF
+        //            foreach (MagickImage frame in collection)
+        //            {
+        //                // Iterate over the pixels of the frame
+        //                int iWidth = (int)frame.Width;
+        //                int iHeight = (int)frame.Height;
+        //                int startCol = (MATRIX_SIZE - iWidth) / 2;
+        //                int startRow = (MATRIX_SIZE - iHeight) / 2;
+        //                matFrame.Add(j.ToString());
+        //                MatrixFrame matrixFrame = new MatrixFrame();
+        //                matrixFrame.iFrameDelay = frame.AnimationDelay * 10;
+        //                matColors.Add(matrixFrame);
+        //                IPixelCollection<ushort> pixels = frame.GetPixels();
+        //                IEnumerator<IPixel<ushort>> ePixels = pixels.GetEnumerator();
+        //                for (int row = 0; row < MATRIX_SIZE; row++)
+        //                {
+        //                    for (int col = 0; col < MATRIX_SIZE; col++)
+        //                    {
+        //                        LedState ledState;
+        //                        if (row < startRow || row > iWidth || col < startRow || col > iHeight)
+        //                        {
+        //                            ledState = new LedState();
+        //                        }
+        //                        else
+        //                        {
+        //                            ePixels.MoveNext();
+        //                            IMagickColor<ushort> color = ePixels.Current.ToColor();
+        //                            byte r = (byte)color.R;
+        //                            byte g = (byte)color.G;
+        //                            byte b = (byte)color.B;
+        //                            ledState = new LedState(new SolidColorBrush(Color.FromRgb(r, g, b)));
+        //                        }
+        //                        matColors[j].MatPixels.Add(ledState);
+        //                    }
+        //                }
+        //                j++;
+        //            }
+        //            m_matViewModel.MatFrame = matFrame;
+        //            m_matViewModel.MatColors = matColors;
+        //        }
+        //        m_matViewModel.MatColorsCurrent = m_matViewModel.MatColors[0].MatPixels;
+        //    }
+        //}
 
         public void SetDisplay(string strExt)
         {

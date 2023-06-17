@@ -22,6 +22,12 @@ namespace GifApp
         {
             MatPixels = new ObservableCollection<LedState>();
         }
+
+        public MatrixFrame(Color colorLed)
+        {
+            MatPixels = new ObservableCollection<LedState>(Enumerable.Repeat(new LedState(new SolidColorBrush(colorLed)), MatrixViewModel.MATRIX_HEIGHT * MatrixViewModel.MATRIX_WIDTH));
+            iFrameDelay = 0;
+        }
     }
 
     public class MatrixViewModel : BaseViewModel
@@ -29,6 +35,9 @@ namespace GifApp
 
         #region Enums & Constants
         public enum DisplaySettings { NONE = 0, GIF = 1, IMAGE = 2 };
+
+        public const int MATRIX_HEIGHT = 32;
+        public const int MATRIX_WIDTH = 32;
 
         #endregion
 
