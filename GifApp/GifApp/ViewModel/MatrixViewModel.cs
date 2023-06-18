@@ -10,13 +10,23 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Xml;
 using System.IO.Ports;
+using System.Drawing.Drawing2D;
 
 namespace GifApp
 {
-    public class MatrixFrame
+    public class MatrixFrame : BaseViewModel
     {
-        public ObservableCollection<LedState> MatPixels;
-        public int iFrameDelay;
+        public ObservableCollection<LedState> MatPixels
+        {
+            get { return m_MatPixels; }
+            set { SetProperty(ref m_MatPixels, value); }
+        }
+
+        public int iFrameDelay
+        {
+            get { return m_iFrameDelay; }
+            set { SetProperty(ref m_iFrameDelay, value); }
+        }
 
         public MatrixFrame()
         {
@@ -25,9 +35,35 @@ namespace GifApp
 
         public MatrixFrame(Color colorLed)
         {
-            MatPixels = new ObservableCollection<LedState>(Enumerable.Repeat(new LedState(new SolidColorBrush(colorLed)), MatrixViewModel.MATRIX_HEIGHT * MatrixViewModel.MATRIX_WIDTH));
+            MatPixels = new ObservableCollection<LedState>();
+            for (int iHeight = 0; iHeight < MatrixViewModel.MATRIX_HEIGHT; iHeight++)
+            {
+                for (int iWidth = 0; iWidth < MatrixViewModel.MATRIX_WIDTH; iWidth++)
+                {
+                    MatPixels.Add(new LedState(new SolidColorBrush(colorLed)));
+                }
+            }
             iFrameDelay = 0;
         }
+
+        public MatrixFrame(MatrixFrame matFrame)
+        {
+            MatPixels = new ObservableCollection<LedState>();
+            foreach(LedState cLed in matFrame.MatPixels)
+            {
+                MatPixels.Add(new LedState(cLed));
+            }    
+
+
+            iFrameDelay = matFrame.iFrameDelay;
+        }
+
+        #region Members
+
+        protected ObservableCollection<LedState> m_MatPixels;
+        protected int m_iFrameDelay;
+
+        #endregion
     }
 
     public class MatrixViewModel : BaseViewModel
@@ -46,7 +82,6 @@ namespace GifApp
         {
             GetPorts();
             InitMatrix();
-            MatColorsCurrent = MatColors[0].MatPixels;
         }
         #endregion
 
@@ -57,12 +92,13 @@ namespace GifApp
             set { SetProperty(ref m_arrPorts, value); }
         }
 
-        public ObservableCollection<LedState> MatColorsCurrent
+        public MatrixFrame MatColorsCurrent
         {
             get { return m_matColorsCurrent; }
             set 
-            { 
-                SetProperty(ref m_matColorsCurrent, value); 
+            {
+                MatColorsCurrent.MatPixels = value.MatPixels;
+                MatColorsCurrent.iFrameDelay = value.iFrameDelay;
             }
         }
 
@@ -96,7 +132,7 @@ namespace GifApp
             set 
             {
                 //MatColors[int.Parse(MatFrameCurrent)] .MatPixels = MatColorsCurrent;
-                MatColorsCurrent = MatColors[int.Parse(value)].MatPixels;
+                MatColorsCurrent = MatColors[int.Parse(value)];
                 SetProperty(ref m_MatFrameCurrent, value); 
             }
         }
@@ -145,6 +181,7 @@ namespace GifApp
                     MatColors[0].MatPixels.Add(new LedState());
                 }
             }
+            MatColorsCurrent = MatColors[0];
         }
         public void GetPorts()
         {
@@ -182,12 +219,13 @@ namespace GifApp
         protected List<string> m_MatFrame = new List<string> { "0" };
         protected string m_MatFrameCurrent = "0";
         protected string m_MatSizeCurrent = string.Empty;
-        protected List<string> m_AnimationSpeed = new List<string> { "x0.5", "x1", "x1.5", "x2" };
+        protected List<string> m_AnimationSpeed = new List<string> { "x0.25", "x0.5", "x1", "x1.5", "x2", "x5", "x10" };
         protected string m_AnimationSpeedCurrent = "x1";
         protected Array m_arrPorts;
         protected string m_PortCurrent = string.Empty;
+        protected int m_iFrameDelayCurrent;
         protected ObservableCollection<MatrixFrame> m_matColors = new ObservableCollection<MatrixFrame>();
-        protected ObservableCollection<LedState> m_matColorsCurrent = new ObservableCollection<LedState>();
+        protected MatrixFrame m_matColorsCurrent = new MatrixFrame();
         protected DisplaySettings m_DisplaySettingCurrent = DisplaySettings.NONE;
         protected Color m_colorBrush;
         #endregion

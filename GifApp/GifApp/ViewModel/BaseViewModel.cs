@@ -38,7 +38,7 @@ namespace GifApp
         /// <param name="propertyName">Name of the property used to notify listeners.  This
         /// value is optional and can be provided automatically when invoked from compilers
         /// that support <see cref="CallerMemberNameAttribute"/>.</param>
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        public virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             var eventHandler = this.PropertyChanged;
             if (eventHandler != null)

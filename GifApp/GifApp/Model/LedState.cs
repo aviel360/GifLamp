@@ -14,7 +14,7 @@ namespace GifApp
         private Brush? m_ColorCurrent;
         public Brush Color
         {
-            get { return m_ColorCurrent; }
+            get { return m_ColorCurrent ?? Brushes.Black; }
             set { SetProperty(ref m_ColorCurrent, value); }
         }
         public double Brightness { get; set; } = 1.0;
@@ -24,6 +24,17 @@ namespace GifApp
         public LedState(Brush? brush = null)
         {
             Color = brush ?? Brushes.Black;
+        }
+
+        public LedState(LedState cLed)
+        {
+            Color = cLed.Color;
+            Brightness = cLed.Brightness;
+        }
+
+        public LedState()
+        {
+            Color = Brushes.Black;
         }
     }
 }

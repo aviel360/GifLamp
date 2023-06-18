@@ -1,32 +1,22 @@
-﻿using System;
+﻿using ImageMagick;
+using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
-using System.IO.Ports;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.IO.Ports;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
-using Microsoft.Win32;
-using System.IO.Pipes;
-using System.Threading;
-using System.Collections;
-using PhotoSauce.MagicScaler;
+using System.Xaml;
 using static GifApp.MatrixViewModel;
-using System.Drawing.Imaging;
-using System.Windows.Media.Media3D;
-using System.Collections.ObjectModel;
-using GifApp.Properties;
-using ImageMagick;
-using System.Xml.Linq;
-using System.Xml;
 
 #nullable enable
 
@@ -79,11 +69,51 @@ namespace GifApp
                 m_matViewModel.BrushColorCurrent = rgbValue.Color;
             }
         }
+        private void PlusCommand(object sender, RoutedEventArgs e)
+        {
+            int iCurrentMat = int.Parse(m_matViewModel.MatFrameCurrent);
+            MatrixFrame matFrame = CopyCheckbox.IsChecked ?? false ? new MatrixFrame(m_matViewModel.MatColors[iCurrentMat]) : new MatrixFrame(Colors.Black);
+            matFrame.iFrameDelay = m_matViewModel.MatColors[iCurrentMat].iFrameDelay;
+
+            ObservableCollection<MatrixFrame> matColorsNew = new ObservableCollection<MatrixFrame>(m_matViewModel.MatColors);
+            matColorsNew.Insert(iCurrentMat + 1, matFrame);
+            m_matViewModel.MatColors = matColorsNew;
+
+            List<string> matFrameCount = new List<string>(m_matViewModel.MatFrame);
+            matFrameCount.Add((m_matViewModel.MatFrame.Count).ToString());
+            m_matViewModel.MatFrame = matFrameCount;
+
+            m_matViewModel.MatColorsCurrent = m_matViewModel.MatColors[iCurrentMat + 1];
+            m_matViewModel.MatFrameCurrent = (iCurrentMat + 1).ToString();
+        }
+
+        private void MinusCommand(object sender, RoutedEventArgs e)
+        {
+            int iCurrentMat = int.Parse(m_matViewModel.MatFrameCurrent);
+            if(m_matViewModel.MatFrame.Count > 1)
+            {
+                ObservableCollection<MatrixFrame> matColorsNew = new ObservableCollection<MatrixFrame>(m_matViewModel.MatColors);
+                matColorsNew.RemoveAt(iCurrentMat);
+                m_matViewModel.MatColors = matColorsNew;
+
+                m_matViewModel.MatFrameCurrent = (iCurrentMat - 1).ToString();
+                List<string> matFrameCount = new List<string>(m_matViewModel.MatFrame);
+                matFrameCount.RemoveAt(m_matViewModel.MatFrame.Count - 1);
+                m_matViewModel.MatFrame = matFrameCount;
+
+                m_matViewModel.MatColorsCurrent = m_matViewModel.MatColors[iCurrentMat - 1];
+            }
+            else
+            {
+                m_matViewModel.MatColors[0] = new MatrixFrame(Colors.Black);
+                m_matViewModel.MatFrameCurrent = "0";
+            }
+        }
 
         private void UploadCommand(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = "Image files (*.bmp, *.jpg, *.jpeg, *.gif, *.png)|*.bmp;*.jpg;*.jpeg;*.png;*.gif|All files (*.*)|*.*";
+            dialog.Filter = "Image files (*.buf, *.bmp, *.jpg, *.jpeg, *.gif, *.png)|*.buf;*.bmp;*.jpg;*.jpeg;*.png;*.gif|All files (*.*)|*.*";
 
             if (dialog.ShowDialog() ?? false)
             {
@@ -132,6 +162,13 @@ namespace GifApp
 
                 // Delay for 50 milliseconds
                 Thread.Sleep(50);
+            }
+        }
+        private void SaveCommand(object sender, RoutedEventArgs e)
+        {
+            using (StreamWriter writer = File.CreateText("test.buf"))
+            {
+                XamlServices.Save(writer, m_matViewModel.MatColors);
             }
         }
 
@@ -220,7 +257,7 @@ namespace GifApp
                     foreach (MagickImage frame in collection)
                     {
                         MatrixFrame matFrame = new MatrixFrame(Colors.Black);
-                        matFrameCount.Add(j.ToString());
+                        matFrameCount.Add(j++.ToString());
                         matFrame.iFrameDelay = frame.AnimationDelay * 10;
                         IPixelCollection<ushort> pixels = frame.GetPixels();
                         IEnumerator<IPixel<ushort>> ePixels = pixels.GetEnumerator();
@@ -235,15 +272,12 @@ namespace GifApp
                             for (int column = 0; column < frame.Width; column++)
                             {
                                 // Get the RGB value of the pixel from the frame
+                                ePixels.MoveNext();
                                 IMagickColor<ushort> color = ePixels.Current.ToColor();
                                 byte r = (byte)color.R;
                                 byte g = (byte)color.G;
                                 byte b = (byte)color.B;
                                 LedState ledState = new LedState(new SolidColorBrush(Color.FromRgb(r, g, b)));
-
-                                // Calculate the corresponding position in the matrix
-                                int matrixX = startX + column;
-                                int matrixY = startY + row;
 
                                 // Assign the RGB value to the corresponding position in the matrix
                                 int collectionIndex = (startY + row) * 32 + (startX + column);
@@ -254,6 +288,9 @@ namespace GifApp
                         }
                         matColors.Add(matFrame);
                     }
+                    m_matViewModel.MatFrame = matFrameCount;
+                    m_matViewModel.MatColors = matColors;
+                    m_matViewModel.MatColorsCurrent = m_matViewModel.MatColors[0];
                 }
             }
         }
