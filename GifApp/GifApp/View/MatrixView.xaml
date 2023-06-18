@@ -76,8 +76,8 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,-10,0,0">
-            <Label Content="Choose Animation Speed" HorizontalAlignment="Center" FontSize="16" FontWeight="DemiBold" Margin="0,10,0,5"/>
+        <StackPanel Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2" Margin="0,-10,65,0">
+            <Label Content="Animation Speed" HorizontalAlignment="Center" FontSize="16" FontWeight="DemiBold" Margin="0,10,0,5"/>
             <ComboBox ItemsSource="{Binding AnimationSpeed}" SelectedItem="{Binding AnimationSpeedCurrent, Mode=TwoWay}" Width="60" Height="23"></ComboBox>
         </StackPanel>
         <StackPanel Grid.Row="0" Grid.Column="0" Margin="10,-10,0,0">
@@ -87,18 +87,18 @@
                 <Button x:Name="ButtonConnect" Click="ConnectCommand" Width="70" Height="23" Margin="30,0,0,0">Connect</Button>
             </StackPanel>
         </StackPanel>
-        <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,-10,0,0">
-            <Label Content="Upload Image \ GIF" HorizontalAlignment="Center" FontSize="16" FontWeight="DemiBold" Margin="0,10,0,5"/>
-            <Button Click="UploadCommand" Width="60" Height="23">Upload</Button>
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Grid.Column="1" Margin="0,-10,150,0">
+            <Label Content="Images Upload / Download" HorizontalAlignment="Center" FontSize="16" FontWeight="DemiBold" Margin="65,10,0,5"/>
+            <Button Click="UploadCommand" Width="60" Height="23">Load</Button>
         </StackPanel>
         <StackPanel Grid.Row="0" Grid.Column="3" Margin="0,-10,0,0">
             <Label Content="Serial Send" HorizontalAlignment="Center" FontSize="16" FontWeight="DemiBold" Margin="0,10,0,5"/>
             <Button Click="SendCommand" Width="60" Height="23">Send</Button>
         </StackPanel>
 
-        <StackPanel Grid.Row="0" Grid.Column="3" Margin="0,-10,150,0">
-            <Label Content="Save Image \ GIF" HorizontalAlignment="Center" FontSize="16" FontWeight="DemiBold" Margin="0,10,0,5"/>
-            <Button Click="SaveCommand" Width="60" Height="23">Send</Button>
+        <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,-10,0,0" Grid.ColumnSpan="2">
+            <Label Content="" HorizontalAlignment="Center" FontSize="16" FontWeight="DemiBold" Margin="0,10,0,5"/>
+            <Button Click="SaveCommand" Width="60" Height="23">Save</Button>
         </StackPanel>
     </Grid>
 </UserControl>
