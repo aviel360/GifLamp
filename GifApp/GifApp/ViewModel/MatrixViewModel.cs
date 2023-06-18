@@ -70,7 +70,7 @@ namespace GifApp
     {   
 
         #region Enums & Constants
-        public enum DisplaySettings { NONE = 0, GIF = 1, IMAGE = 2, BUF = 3 };
+        public enum DisplaySettings { NONE = 0, GIF = 1, IMAGE = 2 };
 
         public const int MATRIX_HEIGHT = 32;
         public const int MATRIX_WIDTH = 32;
@@ -131,10 +131,9 @@ namespace GifApp
             get { return m_MatFrameCurrent; }
             set 
             {
-                int iValue = int.Parse(value ?? 0.ToString());
-                iValue = iValue < 0 ? 0 : iValue;
-                MatColorsCurrent = MatColors[iValue];
-                SetProperty(ref m_MatFrameCurrent, iValue.ToString()); 
+                //MatColors[int.Parse(MatFrameCurrent)] .MatPixels = MatColorsCurrent;
+                MatColorsCurrent = MatColors[int.Parse(value)];
+                SetProperty(ref m_MatFrameCurrent, value); 
             }
         }
 

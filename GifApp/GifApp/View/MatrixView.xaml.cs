@@ -90,20 +90,18 @@ namespace GifApp
         private void MinusCommand(object sender, RoutedEventArgs e)
         {
             int iCurrentMat = int.Parse(m_matViewModel.MatFrameCurrent);
-            iCurrentMat = iCurrentMat < 0 ? 0 : iCurrentMat;
-            int nextMat = iCurrentMat == m_matViewModel.MatColors.Count - 1 ? iCurrentMat - 1 : iCurrentMat;
             if(m_matViewModel.MatFrame.Count > 1)
             {
                 ObservableCollection<MatrixFrame> matColorsNew = new ObservableCollection<MatrixFrame>(m_matViewModel.MatColors);
                 matColorsNew.RemoveAt(iCurrentMat);
                 m_matViewModel.MatColors = matColorsNew;
 
-                m_matViewModel.MatFrameCurrent = (nextMat).ToString();
+                m_matViewModel.MatFrameCurrent = (iCurrentMat - 1).ToString();
                 List<string> matFrameCount = new List<string>(m_matViewModel.MatFrame);
                 matFrameCount.RemoveAt(m_matViewModel.MatFrame.Count - 1);
                 m_matViewModel.MatFrame = matFrameCount;
 
-                m_matViewModel.MatColorsCurrent = m_matViewModel.MatColors[nextMat];
+                m_matViewModel.MatColorsCurrent = m_matViewModel.MatColors[iCurrentMat - 1];
             }
             else
             {
@@ -119,28 +117,15 @@ namespace GifApp
 
             if (dialog.ShowDialog() ?? false)
             {
-                string strImagePath = dialog.FileName;
-                string strExt = System.IO.Path.GetExtension(strImagePath);
-                SetDisplay(strExt);
-                if(m_matViewModel.DisplaySetting == DisplaySettings.BUF)
-                {
-                    using (StreamReader reader = new StreamReader(strImagePath))
-                    {
-                        m_matViewModel.MatColors = (ObservableCollection<MatrixFrame>)XamlServices.Load(reader);
-                        m_matViewModel.MatFrameCurrent = 0.ToString();
-                        List<string> matFrameCount = new List<string>();
-                        for (int iFrame = 0; iFrame < m_matViewModel.MatColors.Count; iFrame++)
-                        {
-                            matFrameCount.Add(iFrame.ToString());
-                        }
-                        m_matViewModel.MatFrame = matFrameCount;
-                    }
-                }
-                else
-                {
-                    ResizeImage(strImagePath);
-                    ConvertImage(strExt);
-                }
+                ConvertImage(ResizeImage(dialog.FileName));
+            }
+            try
+            {
+
+            }
+            catch (Exception)
+            {
+
             }
         }
 
@@ -181,13 +166,9 @@ namespace GifApp
         }
         private void SaveCommand(object sender, RoutedEventArgs e)
         {
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            if (saveFileDialog.ShowDialog() == true)
+            using (StreamWriter writer = File.CreateText("test.buf"))
             {
-                using (StreamWriter writer = File.CreateText(saveFileDialog.FileName))
-                {
-                    XamlServices.Save(writer, m_matViewModel.MatColors);
-                }
+                XamlServices.Save(writer, m_matViewModel.MatColors);
             }
         }
 
@@ -244,8 +225,11 @@ namespace GifApp
         }
 
 
-        private void ResizeImage(string strImagePath)
+        private string ResizeImage(string strImagePath)
         {
+            string strExt = System.IO.Path.GetExtension(strImagePath);
+
+            SetDisplay(strExt);
             using (var collection = new MagickImageCollection(new FileInfo(strImagePath)))
             {
                 collection.Coalesce();
@@ -255,6 +239,7 @@ namespace GifApp
                 }
                 collection.Write(@"..\..\Resources\current.gif");
             }
+            return strExt;
         }
 
         private void ConvertImage(string strExt)
@@ -310,6 +295,61 @@ namespace GifApp
             }
         }
 
+        //private void ConvertImage(string strExt)
+        //{
+        //    using (FileStream stream = new FileStream(@"..\..\Resources\current.gif", FileMode.Open, FileAccess.Read, FileShare.Read))
+        //    {
+        //        GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+        //        ObservableCollection<MatrixFrame> matColors = new ObservableCollection<MatrixFrame>();
+        //        List<string> matFrame = new List<string> { };
+
+        //        using (MagickImageCollection collection = new MagickImageCollection(@"..\..\Resources\current.gif"))
+        //        {
+        //            int j = 0;
+        //            // Iterate over each frame in the GIF
+        //            foreach (MagickImage frame in collection)
+        //            {
+        //                // Iterate over the pixels of the frame
+        //                int iWidth = (int)frame.Width;
+        //                int iHeight = (int)frame.Height;
+        //                int startCol = (MATRIX_SIZE - iWidth) / 2;
+        //                int startRow = (MATRIX_SIZE - iHeight) / 2;
+        //                matFrame.Add(j.ToString());
+        //                MatrixFrame matrixFrame = new MatrixFrame();
+        //                matrixFrame.iFrameDelay = frame.AnimationDelay * 10;
+        //                matColors.Add(matrixFrame);
+        //                IPixelCollection<ushort> pixels = frame.GetPixels();
+        //                IEnumerator<IPixel<ushort>> ePixels = pixels.GetEnumerator();
+        //                for (int row = 0; row < MATRIX_SIZE; row++)
+        //                {
+        //                    for (int col = 0; col < MATRIX_SIZE; col++)
+        //                    {
+        //                        LedState ledState;
+        //                        if (row < startRow || row > iWidth || col < startRow || col > iHeight)
+        //                        {
+        //                            ledState = new LedState();
+        //                        }
+        //                        else
+        //                        {
+        //                            ePixels.MoveNext();
+        //                            IMagickColor<ushort> color = ePixels.Current.ToColor();
+        //                            byte r = (byte)color.R;
+        //                            byte g = (byte)color.G;
+        //                            byte b = (byte)color.B;
+        //                            ledState = new LedState(new SolidColorBrush(Color.FromRgb(r, g, b)));
+        //                        }
+        //                        matColors[j].MatPixels.Add(ledState);
+        //                    }
+        //                }
+        //                j++;
+        //            }
+        //            m_matViewModel.MatFrame = matFrame;
+        //            m_matViewModel.MatColors = matColors;
+        //        }
+        //        m_matViewModel.MatColorsCurrent = m_matViewModel.MatColors[0].MatPixels;
+        //    }
+        //}
+
         public void SetDisplay(string strExt)
         {
             DisplaySettings eDisplay = DisplaySettings.NONE;
@@ -318,10 +358,9 @@ namespace GifApp
                 case ".jpg":
                 case ".png":
                 case ".bmp":
-                case ".gif":
+                    eDisplay = DisplaySettings.IMAGE; break;
+                case ".gif": 
                     eDisplay = DisplaySettings.GIF; break;
-                case ".buf":
-                    eDisplay = DisplaySettings.BUF; break;
             }
             m_matViewModel.DisplaySetting = eDisplay;
         }
