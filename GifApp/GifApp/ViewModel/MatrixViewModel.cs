@@ -187,10 +187,6 @@ namespace GifApp
         public void GetPorts()
         {
             Ports = SerialPort.GetPortNames();
-            //foreach (string port in arrPorts)
-            //{
-            //    Ports.Add(port);
-            //}
         }
 
         public void DisplayImage(int[] arrImage)

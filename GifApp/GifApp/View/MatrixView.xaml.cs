@@ -166,14 +166,14 @@ namespace GifApp
                 }
             }
         }
-
+        
         protected void RunTask()
         {
             while (true)
             {
-                // Do some work here
-                //SendData();
+                // Update ports
                 m_matViewModel.GetPorts();
+
 
                 // Delay for 50 milliseconds
                 Thread.Sleep(50);
@@ -196,7 +196,7 @@ namespace GifApp
             // Accumulate the bytes
             List<byte> byteList = new List<byte>
             {
-                (byte)m_matViewModel.DisplaySetting,
+                (byte)1,
                 (byte)m_matViewModel.MatFrame.Count(), // TODO num of frames
                 (byte)32,
                 (byte)32
@@ -223,7 +223,10 @@ namespace GifApp
                 byteList.Add(arrSpeed[3]);
             }
             // Write the accumulated bytes to the serial port
-            m_serialPort?.Write(byteList.ToArray(), 0, byteList.Count);
+            if(m_bIsConnected && m_matViewModel.Ports.Length > 0)
+            {
+                m_serialPort?.Write(byteList.ToArray(), 0, byteList.Count);
+            }
         }
 
         private float max(float v1, int v2)
@@ -251,7 +254,15 @@ namespace GifApp
                 collection.Coalesce();
                 foreach (var image in collection)
                 {
-                    image.Resize(MATRIX_HEIGHT, 0);
+                    if(image.Width > image.Height)
+                    {
+                        image.Resize(MATRIX_WIDTH, 0);
+                    }
+                    else
+                    {
+
+                        image.Resize(0, MATRIX_HEIGHT); 
+                    }
                 }
                 collection.Write(@"..\..\Resources\current.gif");
             }
@@ -298,7 +309,7 @@ namespace GifApp
                                 int collectionIndex = (startY + row) * 32 + (startX + column);
 
                                 // Assign the RGB value to the corresponding position in the color collection
-                                matFrame.MatPixels[collectionIndex] = ledState;
+                                matFrame.MatPixels[collectionIndex] = ledState; // TODO BUG
                             }
                         }
                         matColors.Add(matFrame);
