@@ -17,6 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Xaml;
 using static GifApp.MatrixViewModel;
+using static System.Environment;
 
 #nullable enable
 
@@ -138,8 +139,15 @@ namespace GifApp
                 }
                 else
                 {
+                    try
+                    {
                     ResizeImage(strImagePath);
-                    ConvertImage(strExt);
+                    ConvertImage();
+                    }
+                    catch(Exception ex) 
+                    {
+                        MessageBox.Show("A handled exception just occurred: " + ex.Message + ex.InnerException.Message + ex.StackTrace, "Exception Sample", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
                 }
             }
         }
@@ -234,18 +242,6 @@ namespace GifApp
             return v1 > v2 ? v1 : v2;
         }
 
-        private void SendCommand1(object sender, RoutedEventArgs e)
-        {
-            //open the file using file stream
-            FileStream fileStream = new FileStream(@"Resources\6SstyNn.bin", FileMode.Open, FileAccess.Read, FileShare.Read);
-
-            //store the open file as binary
-            BinaryReader binary = new BinaryReader(fileStream, Encoding.GetEncoding(28591));
-
-            //at this point I write to the port
-            m_serialPort?.Write(binary.ReadBytes((int)fileStream.Length), 0, (int)fileStream.Length);
-        }
-
 
         private void ResizeImage(string strImagePath)
         {
@@ -264,19 +260,23 @@ namespace GifApp
                         image.Resize(0, MATRIX_HEIGHT); 
                     }
                 }
-                collection.Write(@"Resources\current.gif");
+                var commonpath = GetFolderPath(SpecialFolder.ApplicationData);
+                var path = commonpath + "\\GifResources\\current.gif";
+                collection.Write(path);
             }
         }
 
-        private void ConvertImage(string strExt)
+        private void ConvertImage()
         {
-            using (FileStream stream = new FileStream(@"Resources\current.gif", FileMode.Open, FileAccess.Read, FileShare.Read))
+            var commonpath = GetFolderPath(SpecialFolder.ApplicationData);
+            var path = commonpath + "\\GifResources\\current.gif";
+            using (FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
                 ObservableCollection<MatrixFrame> matColors = new ObservableCollection<MatrixFrame>();
                 List<string> matFrameCount = new List<string> { };
 
-                using (MagickImageCollection collection = new MagickImageCollection(@"Resources\current.gif"))
+                using (MagickImageCollection collection = new MagickImageCollection(path))
                 {
                     int j = 0;
                     // Iterate over each frame in the GIF
