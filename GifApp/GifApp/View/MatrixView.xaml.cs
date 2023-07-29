@@ -237,7 +237,7 @@ namespace GifApp
         private void SendCommand1(object sender, RoutedEventArgs e)
         {
             //open the file using file stream
-            FileStream fileStream = new FileStream(@"..\..\Resources\6SstyNn.bin", FileMode.Open, FileAccess.Read, FileShare.Read);
+            FileStream fileStream = new FileStream(@"Resources\6SstyNn.bin", FileMode.Open, FileAccess.Read, FileShare.Read);
 
             //store the open file as binary
             BinaryReader binary = new BinaryReader(fileStream, Encoding.GetEncoding(28591));
@@ -264,19 +264,19 @@ namespace GifApp
                         image.Resize(0, MATRIX_HEIGHT); 
                     }
                 }
-                collection.Write(@"..\..\Resources\current.gif");
+                collection.Write(@"Resources\current.gif");
             }
         }
 
         private void ConvertImage(string strExt)
         {
-            using (FileStream stream = new FileStream(@"..\..\Resources\current.gif", FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (FileStream stream = new FileStream(@"Resources\current.gif", FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
                 ObservableCollection<MatrixFrame> matColors = new ObservableCollection<MatrixFrame>();
                 List<string> matFrameCount = new List<string> { };
 
-                using (MagickImageCollection collection = new MagickImageCollection(@"..\..\Resources\current.gif"))
+                using (MagickImageCollection collection = new MagickImageCollection(@"Resources\current.gif"))
                 {
                     int j = 0;
                     // Iterate over each frame in the GIF
