@@ -39,3 +39,4 @@ You can also find the other project directories:
 ____________________________________________________________________________________________________________________________________
 
 [GIF-Lamp - Group 11 - IOT poster.pptx](https://github.com/aviel360/GifLamp/files/12222369/GIF-Lamp.-.Group.11.-.IOT.poster.pptx)
+![Alt text](/Presentation/Poster.jpg?raw=true "Poster")
