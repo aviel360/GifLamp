@@ -1,4 +1,5 @@
 GifApp/GifApp/bin/
 GifApp/GifApp/obj/
 GifApp/.vs/
-GifApp/GifAppSetup/
+GifApp/GifAppSetup/Debug
+GifApp/GifAppSetup/Release
