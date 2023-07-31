@@ -1,4 +1,7 @@
 # GifLamp
+
+this project was created by Daniel Elgarici, Aviel Cohen and Evgeny Lambord.
+
 GifLamp offers a versatile platform to play classic games, display pictures, and showcase animated GIFs. It's a creative and engaging project that combines hardware and software to produce mesmerizing visual experiences.
 it is an interactive LED matrix powered by ESP32 which consists of two applications:
 
@@ -10,13 +13,14 @@ it is an interactive LED matrix powered by ESP32 which consists of two applicati
 
 2) WPF Application: The WPF application empowers users to upload, edit, and create GIFs. These GIFs can then be sent to the LED matrix for display. The LED matrix can save the GIFs onto an SD card.
 
-Features
-Interactive LED matrix for displaying GIFs.
-CellPhone App for full control over the LED matrix and switching between modes.
-WPF Application for uploading, editing, and creating GIFs.
-SD card support for storing GIFs on the LED matrix.
-Four modes: Serial Input, Tetris Game, Snake Game, and Pixel Art.
-Endless possibilities for visual entertainment and creativity.
+______________________
+The names and versions of the libraries we worked with ESP32
 
-Installation
-[Provide detailed instructions on how to set up and install the GifLamp project. Include hardware requirements, software dependencies, and configuration steps.]
+FastLED.h
+LEDMatrix.h
+LEDSprites.h
+LEDText.h
+FontMatrise.h
+Blue0toothSerial.h
+SD.h
+SPI.h
