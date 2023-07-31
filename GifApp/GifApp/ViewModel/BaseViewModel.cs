@@ -40,9 +40,7 @@ namespace GifApp
         /// that support <see cref="CallerMemberNameAttribute"/>.</param>
         public virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
-            var eventHandler = this.PropertyChanged;
-            if (eventHandler != null)
-                eventHandler(this, new PropertyChangedEventArgs(propertyName));
+            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

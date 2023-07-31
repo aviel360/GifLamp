@@ -39,7 +39,6 @@ namespace GifApp
             InitializeComponent();
             m_matViewModel = new MatrixViewModel();
             DataContext = m_matViewModel;
-            //m_colorCurrentBrush = "#FFFFFF";
             m_matViewModel.BrushColorCurrent = Colors.White;
             Task.Run(RunTask);
         }
@@ -51,21 +50,15 @@ namespace GifApp
 
         private void Rectangle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            Rectangle? clickedRectangle = e.OriginalSource as Rectangle;
-            if (clickedRectangle != null)
+            if (e.OriginalSource is Rectangle clickedRectangle)
             {
-                // Do something with the clicked Rectangle
                 clickedRectangle.Fill = (new SolidColorBrush(m_matViewModel.BrushColorCurrent));
-                //clickedRectangle.Fill = (SolidColorBrush)(new BrushConverter().ConvertFrom(m_colorCurrentBrush) ?? clickedRectangle.Fill);
             }
         }
         private void Rectangle_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            Rectangle? clickedRectangle = e.OriginalSource as Rectangle;
-            if (clickedRectangle != null)
+            if (e.OriginalSource is Rectangle clickedRectangle)
             {
-                // Do something with the clicked Rectangle
-                //m_colorCurrentBrush = clickedRectangle.Fill.ToString();
                 SolidColorBrush rgbValue = clickedRectangle.Fill as SolidColorBrush ?? new SolidColorBrush(Colors.White);
                 m_matViewModel.BrushColorCurrent = rgbValue.Color;
             }
@@ -80,8 +73,10 @@ namespace GifApp
             matColorsNew.Insert(iCurrentMat + 1, matFrame);
             m_matViewModel.MatColors = matColorsNew;
 
-            List<string> matFrameCount = new List<string>(m_matViewModel.MatFrame);
-            matFrameCount.Add((m_matViewModel.MatFrame.Count).ToString());
+            List<string> matFrameCount = new List<string>(m_matViewModel.MatFrame)
+            {
+                (m_matViewModel.MatFrame.Count).ToString()
+            };
             m_matViewModel.MatFrame = matFrameCount;
 
             m_matViewModel.MatColorsCurrent = m_matViewModel.MatColors[iCurrentMat + 1];
@@ -115,8 +110,10 @@ namespace GifApp
 
         private void UploadCommand(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = "Image files (*.buf, *.bmp, *.jpg, *.jpeg, *.gif, *.png)|*.buf;*.bmp;*.jpg;*.jpeg;*.png;*.gif|All files (*.*)|*.*";
+            OpenFileDialog dialog = new OpenFileDialog
+            {
+                Filter = "Image files (*.buf, *.bmp, *.jpg, *.jpeg, *.gif, *.png)|*.buf;*.bmp;*.jpg;*.jpeg;*.png;*.gif|All files (*.*)|*.*"
+            };
 
             if (dialog.ShowDialog() ?? false)
             {
@@ -125,17 +122,15 @@ namespace GifApp
                 SetDisplay(strExt);
                 if(m_matViewModel.DisplaySetting == DisplaySettings.BUF)
                 {
-                    using (StreamReader reader = new StreamReader(strImagePath))
+                    using StreamReader reader = new StreamReader(strImagePath);
+                    m_matViewModel.MatColors = (ObservableCollection<MatrixFrame>)XamlServices.Load(reader);
+                    m_matViewModel.MatFrameCurrent = 0.ToString();
+                    List<string> matFrameCount = new List<string>();
+                    for (int iFrame = 0; iFrame < m_matViewModel.MatColors.Count; iFrame++)
                     {
-                        m_matViewModel.MatColors = (ObservableCollection<MatrixFrame>)XamlServices.Load(reader);
-                        m_matViewModel.MatFrameCurrent = 0.ToString();
-                        List<string> matFrameCount = new List<string>();
-                        for (int iFrame = 0; iFrame < m_matViewModel.MatColors.Count; iFrame++)
-                        {
-                            matFrameCount.Add(iFrame.ToString());
-                        }
-                        m_matViewModel.MatFrame = matFrameCount;
+                        matFrameCount.Add(iFrame.ToString());
                     }
+                    m_matViewModel.MatFrame = matFrameCount;
                 }
                 else
                 {
@@ -182,7 +177,6 @@ namespace GifApp
                 // Update ports
                 m_matViewModel.GetPorts();
 
-
                 // Delay for 50 milliseconds
                 Thread.Sleep(50);
             }
@@ -192,25 +186,27 @@ namespace GifApp
             SaveFileDialog saveFileDialog = new SaveFileDialog();
             if (saveFileDialog.ShowDialog() == true)
             {
-                using (StreamWriter writer = File.CreateText(saveFileDialog.FileName))
-                {
-                    XamlServices.Save(writer, m_matViewModel.MatColors);
-                }
+                using StreamWriter writer = File.CreateText(saveFileDialog.FileName);
+                XamlServices.Save(writer, m_matViewModel.MatColors);
             }
         }
 
         private void SendCommand(object sender, RoutedEventArgs e)
         {
+            _ = new List<MatrixFrame>();
+            List<MatrixFrame> listFrames = m_matViewModel.MatColors.Take(20).ToList();
+
             // Accumulate the bytes
             List<byte> byteList = new List<byte>
             {
                 (byte)1,
-                (byte)m_matViewModel.MatFrame.Count(), // TODO num of frames
+                (byte)listFrames.Count(),
                 (byte)32,
                 (byte)32
             };
+
             // Loop through the matrix and convert each hex value to bytes
-            foreach(MatrixFrame matFrame in m_matViewModel.MatColors)
+            foreach(MatrixFrame matFrame in listFrames)
             {
                 foreach(LedState ledPixel in matFrame.MatPixels)
                 {
@@ -230,99 +226,114 @@ namespace GifApp
                 byteList.Add(arrSpeed[2]);
                 byteList.Add(arrSpeed[3]);
             }
+
             // Write the accumulated bytes to the serial port
-            if(m_bIsConnected && m_matViewModel.Ports.Length > 0)
+            if(!String.IsNullOrEmpty(m_matViewModel.PortCurrent))
             {
                 m_serialPort?.Write(byteList.ToArray(), 0, byteList.Count);
+            }
+            else
+            {
+                m_serialPort?.Close();
+                ButtonConnect.Content = "Connect";
+                PortsComboBox.IsEnabled = true;
+                m_bIsConnected = false;
             }
         }
 
         private float max(float v1, int v2)
         {
+            // return max value between two values
             return v1 > v2 ? v1 : v2;
         }
 
 
         private void ResizeImage(string strImagePath)
         {
-            using (var collection = new MagickImageCollection(new FileInfo(strImagePath)))
+            // Resize each frame acording to its propotion (height or width)
+            using var collection = new MagickImageCollection(new FileInfo(strImagePath));
+            collection.Coalesce();
+            foreach (var image in collection)
             {
-                collection.Coalesce();
-                foreach (var image in collection)
+                if (image.Width > image.Height)
                 {
-                    if(image.Width > image.Height)
-                    {
-                        image.Resize(MATRIX_WIDTH, 0);
-                    }
-                    else
-                    {
-
-                        image.Resize(0, MATRIX_HEIGHT); 
-                    }
+                    image.Resize(MATRIX_WIDTH, 0);
                 }
-                var commonpath = GetFolderPath(SpecialFolder.ApplicationData);
-                var path = commonpath + "\\GifResources\\current.gif";
-                collection.Write(path);
+                else
+                {
+                    image.Resize(0, MATRIX_HEIGHT);
+                }
             }
+            // Save the gif to a known location in user AppData
+            var commonpath = GetFolderPath(SpecialFolder.ApplicationData);
+            var path = commonpath + "\\GifResources\\current.gif";
+            collection.Write(path);
         }
 
         private void ConvertImage()
         {
+            
             var commonpath = GetFolderPath(SpecialFolder.ApplicationData);
             var path = commonpath + "\\GifResources\\current.gif";
-            using (FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+
+            // Load the resized file from the known location in user AppData
+            using FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+            ObservableCollection<MatrixFrame> matColors = new ObservableCollection<MatrixFrame>();
+            List<string> matFrameCount = new List<string> { };
+
+            // Decode the gif center its alignment
+            using MagickImageCollection collection = new MagickImageCollection(path);
+            int j = 0;
+            // Iterate over each frame in the GIF
+            foreach (MagickImage frame in collection.Cast<MagickImage>())
             {
-                GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
-                ObservableCollection<MatrixFrame> matColors = new ObservableCollection<MatrixFrame>();
-                List<string> matFrameCount = new List<string> { };
+                MatrixFrame matFrame = new MatrixFrame(Colors.Black);
+                matFrameCount.Add(j++.ToString());
+                matFrame.iFrameDelay = frame.AnimationDelay * 10;
+                IPixelCollection<ushort> pixels = frame.GetPixels();
+                IEnumerator<IPixel<ushort>> ePixels = pixels.GetEnumerator();
 
-                using (MagickImageCollection collection = new MagickImageCollection(path))
+                // Calculate the starting position in the 32x32 matrix
+                int startX = (32 - frame.Width) / 2;
+                int startY = (32 - frame.Height) / 2;
+
+                // Iterate over the pixels of the image and assign RGB values to the matrix
+                for (int row = 0; row < frame.Height; row++)
                 {
-                    int j = 0;
-                    // Iterate over each frame in the GIF
-                    foreach (MagickImage frame in collection)
+                    for (int column = 0; column < frame.Width; column++)
                     {
-                        MatrixFrame matFrame = new MatrixFrame(Colors.Black);
-                        matFrameCount.Add(j++.ToString());
-                        matFrame.iFrameDelay = frame.AnimationDelay * 10;
-                        IPixelCollection<ushort> pixels = frame.GetPixels();
-                        IEnumerator<IPixel<ushort>> ePixels = pixels.GetEnumerator();
+                        // Get the RGB value of the pixel from the frame
+                        ePixels.MoveNext();
+                        IMagickColor<ushort>? color = ePixels.Current.ToColor();
+                        LedState ledState = new LedState(Brushes.Black);
 
-                        // Calculate the starting position in the 32x32 matrix
-                        int startX = (32 - frame.Width) / 2;
-                        int startY = (32 - frame.Height) / 2;
-
-                        // Iterate over the pixels of the image and assign RGB values to the matrix
-                        for (int row = 0; row < frame.Height; row++)
+                        if (color != null)
                         {
-                            for (int column = 0; column < frame.Width; column++)
-                            {
-                                // Get the RGB value of the pixel from the frame
-                                ePixels.MoveNext();
-                                IMagickColor<ushort> color = ePixels.Current.ToColor();
-                                byte r = (byte)color.R;
-                                byte g = (byte)color.G;
-                                byte b = (byte)color.B;
-                                LedState ledState = new LedState(new SolidColorBrush(Color.FromRgb(r, g, b)));
-
-                                // Assign the RGB value to the corresponding position in the matrix
-                                int collectionIndex = (startY + row) * 32 + (startX + column);
-
-                                // Assign the RGB value to the corresponding position in the color collection
-                                matFrame.MatPixels[collectionIndex] = ledState; // TODO BUG
-                            }
+                            byte r = (byte)color.R;
+                            byte g = (byte)color.G;
+                            byte b = (byte)color.B;
+                            ledState = new LedState(new SolidColorBrush(Color.FromRgb(r, g, b)));
                         }
-                        matColors.Add(matFrame);
+
+                        // Assign the RGB value to the corresponding position in the matrix
+                        int collectionIndex = (startY + row) * 32 + (startX + column);
+
+                        // Assign the RGB value to the corresponding position in the color collection
+                        matFrame.MatPixels[collectionIndex] = ledState;
                     }
-                    m_matViewModel.MatFrame = matFrameCount;
-                    m_matViewModel.MatColors = matColors;
-                    m_matViewModel.MatColorsCurrent = m_matViewModel.MatColors[0];
                 }
+                matColors.Add(matFrame);
             }
+            // Update the according frame in the matrix collection
+            m_matViewModel.MatFrame = matFrameCount;
+            m_matViewModel.MatColors = matColors;
+            m_matViewModel.MatColorsCurrent = m_matViewModel.MatColors[0];
         }
 
         public void SetDisplay(string strExt)
         {
+            // Set the state according to extension of the current file
             DisplaySettings eDisplay = DisplaySettings.NONE;
             switch(strExt)
             {
