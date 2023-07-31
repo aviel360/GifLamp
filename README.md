@@ -37,7 +37,6 @@ You can also find the other project directories:
 * PhoneApp - This directory contains the .aia file with which you can edit the mobile app. This file corresponds to MIT app inventor 
 * Presentation - A directory containing the files with which we presented the project. Presentation and poster.
 ____________________________________________________________________________________________________________________________________
-<p align="center">
+
 [GIF-Lamp - Group 11 - IOT poster.pptx](https://github.com/aviel360/GifLamp/files/12222369/GIF-Lamp.-.Group.11.-.IOT.poster.pptx)
 ![Alt text](/Presentation/Poster.jpg?raw=true "Poster")
-</p>
