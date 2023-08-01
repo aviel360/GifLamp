@@ -194,7 +194,7 @@ namespace GifApp
         private void SendCommand(object sender, RoutedEventArgs e)
         {
             _ = new List<MatrixFrame>();
-            List<MatrixFrame> listFrames = m_matViewModel.MatColors.Take(20).ToList();
+            List<MatrixFrame> listFrames = m_matViewModel.MatColors.Take(18).ToList();
 
             // Accumulate the bytes
             List<byte> byteList = new List<byte>
